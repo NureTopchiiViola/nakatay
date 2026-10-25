@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  --color-background: #212121;
+  --color-surface: #2e2e2e;
+  --color-surface-raised: #353535;
+  --color-surface-hover: #383838;
+  --color-text-primary: #cec6bd;
+  --color-text-secondary: #8c857b;
+  --color-accent-hover: #ddd7d0;
+  --color-border: rgb(206 198 189 / 20%);
+  --color-border-strong: rgb(206 198 189 / 42%);
+  --color-success: #88917a;
+  --color-danger: #9a6e62;
+
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-heading: 'Manrope', 'Segoe UI', sans-serif;
+
+  font: 16px/1.5 var(--font-body);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 360px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 360px;
+  min-height: 100vh;
+}
+
+body,
+button,
+input,
+select {
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+  margin: 0;
+}
+
+button,
+input,
+select {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}

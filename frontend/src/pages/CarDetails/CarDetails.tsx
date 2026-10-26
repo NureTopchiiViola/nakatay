@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   MdOutlineShare, 
   MdOutlineFavoriteBorder, 
@@ -14,30 +15,47 @@ import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
 
-interface CarDetailsProps {
-  car?: CarDetailsData;
-}
-
-const defaultCar: CarDetailsData = {
-  id: 1,
-  brand: "BMW",
-  modelName: "M4",
-  trimName: "Competition",
-  year: 2023,
-  engine: "3.0L Twin-Turbo I6",
-  transmission: "AUTOMATIC",
-  bodyType: "COUPE",
-  price: 85000.00,
-  galleryUrls: [
-    "https://placehold.co/800x450/2e2e2e/cec6bd?text=BMW+M4+Front",
-    "https://placehold.co/150x100/2e2e2e/cec6bd?text=Side",
-    "https://placehold.co/150x100/2e2e2e/cec6bd?text=Interior"
-  ]
-};
-
-export function CarDetails({ car = defaultCar }: CarDetailsProps) {
+export function CarDetails() {
+  const { id } = useParams<{ id: string }>(); 
+  
+  const [car, setCar] = useState<CarDetailsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isCompared, setIsCompared] = useState(false);
+
+  useEffect(() => {
+    const fetchCarData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`https://ignition-arose-confider.ngrok-free.dev/api/cars/${id}`, {
+          method: 'GET',
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data: CarDetailsData = await response.json();
+        setCar(data);
+      } catch (error) {
+        console.error("Error fetching car data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) fetchCarData();
+  }, [id]);
+
+  if (isLoading) {
+    return <div style={{ padding: '4rem', textAlign: 'center', color: '#fff' }}>Завантаження даних...</div>;
+  }
+
+  if (!car) {
+    return <div style={{ padding: '4rem', textAlign: 'center', color: '#fff' }}>Автомобіль не знайдено (404)</div>;
+  }
 
   const formattedPrice = new Intl.NumberFormat('uk-UA').format(car.price);
 
@@ -55,21 +73,27 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
 
           <div className="car-gallery">
             <div className="car-gallery-main">
-              {/* Hardcoded to true lol */}
               <div className="car-availability-badge">В наявності</div>
-              <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
+              {car.galleryUrls && car.galleryUrls.length > 0 ? (
+                <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
+              ) : (
+                <div style={{ height: '100%', background: '#2e2e2e' }} /> // Fallback if no images
+              )}
             </div>
-            <div className="car-gallery-thumbnails">
-              {car.galleryUrls.map((img, idx) => (
-                <button
-                  key={idx}
-                  className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
-                  onClick={() => setActiveImageIndex(idx)}
-                >
-                  <img src={img} alt={`Thumbnail ${idx + 1}`} />
-                </button>
-              ))}
-            </div>
+            
+            {car.galleryUrls && car.galleryUrls.length > 0 && (
+              <div className="car-gallery-thumbnails">
+                {car.galleryUrls.map((img, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
+                    onClick={() => setActiveImageIndex(idx)}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="car-actions-bar">
@@ -167,7 +191,9 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
                 <div className="summary-price">{formattedPrice} ₴</div>
                 <span className="summary-price-note">Зафіксована ціна за обрану комплектацію</span>
               </div>
-              <img src={car.galleryUrls[0]} alt="Car thumbnail" className="summary-thumbnail" />
+              {car.galleryUrls && car.galleryUrls.length > 0 && (
+                <img src={car.galleryUrls[0]} alt="Car thumbnail" className="summary-thumbnail" />
+              )}
             </div>
 
             <div className="summary-actions">

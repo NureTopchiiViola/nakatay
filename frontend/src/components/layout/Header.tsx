@@ -1,63 +1,45 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { MdOutlineSearch, MdOutlinePerson, MdOutlineFavoriteBorder } from 'react-icons/md';
-import { Input } from '../../components/ui/Input'; // Adjust path if needed
-import { Button } from '../../components/ui/Button'; // Adjust path if needed
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
-export type PageView = 'catalog' | 'test-drive' | 'create' | 'comparison' | 'details';
-
-interface HeaderProps {
-  currentPage?: PageView;
-  onNavigate?: (page: PageView) => void;
-}
-
-export function Header({ currentPage, onNavigate }: HeaderProps) {
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, page: PageView) => {
-    if (onNavigate) {
-      e.preventDefault();
-      onNavigate(page);
-    }
-  };
+export function Header() {
+  // Отримуємо поточний шлях з URL
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <header className="site-header">
-      <a 
-        aria-label="Nakatay — на головну" 
-        className="wordmark" 
-        href="#catalog"
-        onClick={(e) => handleNavClick(e, 'catalog')}
-      >
+      <Link aria-label="Nakatay — на головну" className="wordmark" to="/catalog">
         nakatay
-      </a>
+      </Link>
 
       <nav aria-label="Основна навігація" className="main-nav">
-        <a 
-          href="#catalog" 
-          className={currentPage === 'catalog' ? 'active' : ''}
-          onClick={(e) => handleNavClick(e, 'catalog')}
+        <Link 
+          to="/catalog" 
+          className={currentPath.startsWith('/catalog') ? 'active' : ''}
         >
           Автомобілі
-        </a>
-        <a 
-          href="#test-drive" 
-          className={currentPage === 'test-drive' ? 'active' : ''}
-          onClick={(e) => handleNavClick(e, 'test-drive')}
+        </Link>
+        <Link 
+          to="/test-drive" 
+          className={currentPath === '/test-drive' ? 'active' : ''}
         >
           Тест-драйв
-        </a>
-        <a 
-          href="#create" 
-          className={currentPage === 'create' ? 'active' : ''}
-          onClick={(e) => handleNavClick(e, 'create')}
+        </Link>
+        <Link 
+          to="/create" 
+          className={currentPath === '/create' ? 'active' : ''}
         >
           Створити
-        </a>
-        <a 
-          href="#compare" 
-          className={currentPage === 'comparison' ? 'active' : ''}
-          onClick={(e) => handleNavClick(e, 'comparison')}
+        </Link>
+        <Link 
+          to="/compare" 
+          className={currentPath === '/compare' ? 'active' : ''}
         >
           Порівняти
-        </a>
+        </Link>
       </nav>
 
       <div className="header-actions">

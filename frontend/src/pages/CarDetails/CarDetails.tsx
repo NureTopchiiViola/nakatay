@@ -6,8 +6,10 @@ import {
   MdOutlineCalendarMonth,
   MdOutlineLocalGasStation,
   MdOutlineSettings,
-  MdOutlineSpeed
+  MdOutlineSpeed,
+  MdOutlineBalance
 } from 'react-icons/md';
+import balanceCheckIcon from '../../assets/BalanceCheck.svg';
 import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
@@ -42,12 +44,13 @@ const defaultCar: CarDetailsData = {
 
 export function CarDetails({ car = defaultCar }: CarDetailsProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isCompared, setIsCompared] = useState(false);
+
   const formattedPrice = new Intl.NumberFormat('uk-UA').format(car.price);
 
   return (
     <div className="car-page-container">
       <div className="car-page-grid">
-        
         <section className="car-info-section">
           <header className="car-page-header">
             <div className="car-title-block">
@@ -66,8 +69,8 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
             </div>
             <div className="car-gallery-thumbnails">
               {car.images.map((img, idx) => (
-                <button 
-                  key={idx} 
+                <button
+                  key={idx}
                   className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
                   onClick={() => setActiveImageIndex(idx)}
                 >
@@ -78,7 +81,16 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           </div>
 
           <div className="car-actions-bar">
-            <Button variant="ghost" iconLeft={<MdOutlineShare />}>Поділитися</Button>
+            <div className="actions-group">
+              <Button variant="ghost" iconLeft={<MdOutlineShare />}>Поділитися</Button>
+              <Button
+                variant="ghost"
+                onClick={() => setIsCompared(!isCompared)}
+                iconLeft={isCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />}
+              >
+                {isCompared ? 'У порівнянні' : 'Порівняти'}
+              </Button>
+            </div>
             <button className="favorite-btn" aria-label="Додати в обране">
               <MdOutlineFavoriteBorder size={28} />
             </button>
@@ -110,10 +122,17 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
             <div className="accordion-item">
               <h3>Колір салону</h3>
             </div>
-            <button className="accordion-item accordion-trigger">
-              <h3>Опції</h3>
-              <MdAdd size={24} />
-            </button>
+
+            <div className="configurator-action-wrapper">
+              <Button
+                variant="outline"
+                className="full-width"
+                onClick={() => window.location.href = '#configurator'}
+              >
+                Відкрити конфігуратор
+              </Button>
+            </div>
+
             <button className="accordion-item accordion-trigger">
               <h3>Гарантійні умови</h3>
               <MdAdd size={24} />
@@ -123,7 +142,7 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
 
         <aside className="car-purchase-section">
           <h2 className="section-title">Розпочати покупку</h2>
-          
+
           <div className="purchase-options-grid">
             <div className="purchase-card active">
               <h4>Подати заявку на придбання</h4>
@@ -147,7 +166,7 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           </div>
 
           <h2 className="section-title summary-title">Підсумок щодо комерційної пропозиції</h2>
-          
+
           <div className="summary-panel">
             <div className="summary-header">
               <div className="summary-info">
@@ -171,7 +190,6 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
             </div>
           </div>
         </aside>
-
       </div>
     </div>
   );

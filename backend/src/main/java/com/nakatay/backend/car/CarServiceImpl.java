@@ -1,13 +1,13 @@
 package com.nakatay.backend.car;
 
+import com.nakatay.backend.car.dto.CarFilterParams;
 import com.nakatay.backend.car.dto.CarListItemResponse;
-import com.nakatay.backend.car.dto.CarModelDto;
 import com.nakatay.backend.car.dto.CarTrimDto;
 import com.nakatay.backend.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,26 +37,17 @@ public class CarServiceImpl implements CarService{
     }
 
     @Override
-    public List<CarListItemResponse> searchCars(String query) {
-        List<CarTrim> trims;
-        if(query.isEmpty()){
-            trims = carTrimRepository.findAllDefault();
-        }
-        else{
-            trims = carTrimRepository.searchByQuery(query);
-        }
+    public Page<CarListItemResponse> searchCars(CarFilterParams filter, Pageable pageable) {
+        Page<CarTrim> trimPage = carTrimRepository.findAll(CarSearchSpecifications.withFilters(filter), pageable);
 
-        return trims.stream()
-                .filter(trim -> !trim.getCarModel().isDeleted() && trim.isAvailable())
-                .map(trim -> new CarListItemResponse(
-                        trim.getId(),
-                        trim.getCarModel().getBrand() + " " + trim.getCarModel().getModelName() + " " + trim.getTrimName(),
-                        trim.getYear(),
-                        trim.getEngine(),
-                        trim.getTransmission(),
-                        trim.getCarModel().getBasePrice().add(trim.getPriceModifier()),
-                        trim.getCarModel().getMainImageUrl()
-                ))
-                .toList();
+        return trimPage.map(trim -> new CarListItemResponse(
+                trim.getId(),
+                trim.getCarModel().getBrand() + " " + trim.getCarModel().getModelName() + " " + trim.getTrimName(),
+                trim.getYear(),
+                trim.getEngine(),
+                trim.getTransmission(),
+                trim.getCarModel().getBasePrice().add(trim.getPriceModifier()),
+                trim.getCarModel().getMainImageUrl()
+        ));
     }
 }

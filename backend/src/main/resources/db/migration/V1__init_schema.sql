@@ -19,8 +19,12 @@ CREATE TABLE IF NOT EXISTS car_trim (
                                         engine VARCHAR(100) NOT NULL,
                                         transmission VARCHAR(50) NOT NULL,
                                         price_modifier DECIMAL(12, 2) DEFAULT 0.0,
-
                                         is_available BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS car_trim_gallery (
+                                                trim_id BIGINT NOT NULL REFERENCES car_trim(trim_id) ON DELETE CASCADE,
+                                                image_url VARCHAR(255) NOT NULL
 );
 
 -- indexes for car_model
@@ -47,3 +51,13 @@ VALUES
     (2, 'Base', 2024, '4.0L Twin-Turbo V8', 'AUTOMATIC', 0.00),
     (3, 'Carrera', 2023, '3.0L Flat-6', 'PDK (AUTOMATIC)', 0.00),
     (4, 'Hybrid', 2024, '2.5L Hybrid', 'CVT (AUTOMATIC)', 0.00);
+
+INSERT INTO car_trim_gallery (trim_id, image_url)
+VALUES
+    (1, 'https://example.com/images/m4-front.jpg'),
+    (1, 'https://example.com/images/m4-side.jpg'),
+    (1, 'https://example.com/images/m4-interior.jpg'),
+    (2, 'https://example.com/images/rs6-front.jpg'),
+    (2, 'https://example.com/images/rs6-back.jpg'),
+    (3, 'https://example.com/images/911-front.jpg'),
+    (4, 'https://example.com/images/camry-front.jpg');

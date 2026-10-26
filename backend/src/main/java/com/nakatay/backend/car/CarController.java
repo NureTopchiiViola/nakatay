@@ -2,6 +2,7 @@ package com.nakatay.backend.car;
 
 import com.nakatay.backend.car.dto.CarListItemResponse;
 import com.nakatay.backend.car.dto.CarModelDto;
+import com.nakatay.backend.car.dto.CarTrimDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +15,7 @@ public class CarController {
     private final CarService carService;
 
     @GetMapping("/{id}")
-    public CarModelDto getCar(@PathVariable Long id) {
+    public CarTrimDto getCar(@PathVariable Long id) {
         return carService.getCarById(id);
     }
 

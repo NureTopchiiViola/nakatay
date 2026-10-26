@@ -3,8 +3,8 @@ package com.nakatay.backend.car;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -35,6 +35,11 @@ public class CarTrim {
 
     @Column(name = "price_modifier")
     private BigDecimal priceModifier = BigDecimal.ZERO;
+
+    @ElementCollection
+    @CollectionTable(name = "car_trim_gallery", joinColumns = @JoinColumn(name = "trim_id"))
+    @Column(name = "image_url")
+    private List<String> galleryUrls;
 
     @Column(name = "is_available", nullable = false)
     private boolean isAvailable = true;

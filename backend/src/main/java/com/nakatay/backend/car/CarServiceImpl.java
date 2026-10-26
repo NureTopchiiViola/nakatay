@@ -12,39 +12,51 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CarServiceImpl implements CarService{
-    private final CarRepository carRepository;
+    private final CarTrimRepository carTrimRepository;
 
     @Override
-    public CarModelDto getCarById(Long id) {
-        CarModel car = carRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Автомобіль не знайдено"));
+    public CarTrimDto getCarById(Long trimId) {
+        CarTrim trim = carTrimRepository.findByIdWithModel(trimId).orElseThrow(() -> new ResourceNotFoundException("Комплектацію не знайдено"));
 
-        if (car.isDeleted()) {
-            throw new ResourceNotFoundException("Автомобіль не знайдено");
+        if (trim.getCarModel().isDeleted() || !trim.isAvailable()) {
+            throw new ResourceNotFoundException("Автомобіль недоступний");
         }
 
-        List<CarTrimDto> trims = car.getTrims().stream()
-                .map(t -> new CarTrimDto(t.getTrimName(), t.getEngine(), t.getTransmission(), t.getYear(), t.getPriceModifier()))
-                .toList();
-
-        return new CarModelDto(
-                car.getId(), car.getBrand(), car.getModelName(),
-                car.getBasePrice(), car.getDescription(), car.getMainImageUrl(), trims
+        return new CarTrimDto(
+                trim.getId(),
+                trim.getCarModel().getBrand(),
+                trim.getCarModel().getModelName(),
+                trim.getTrimName(),
+                trim.getYear(),
+                trim.getEngine(),
+                trim.getTransmission(),
+                trim.getCarModel().getBodyType(),
+                trim.getCarModel().getBasePrice().add(trim.getPriceModifier()),
+                trim.getGalleryUrls()
         );
     }
 
     @Override
     public List<CarListItemResponse> searchCars(String query) {
-        List<CarModel> cars;
+        List<CarTrim> trims;
         if(query.isEmpty()){
-            cars = carRepository.findAllByOrderByCreatedAtDesc();
+            trims = carTrimRepository.findAllDefault();
         }
         else{
-            cars = carRepository.findByBrandContainingIgnoreCaseOrModelNameContainingIgnoreCase(query, query);
+            trims = carTrimRepository.searchByQuery(query);
         }
 
-        return cars.stream()
-                .filter(car -> !car.isDeleted())
-                .map(car -> new CarListItemResponse(car.getId(), car.getBrand(), car.getModelName(), car.getBasePrice(), car.getMainImageUrl()))
+        return trims.stream()
+                .filter(trim -> !trim.getCarModel().isDeleted() && trim.isAvailable())
+                .map(trim -> new CarListItemResponse(
+                        trim.getId(),
+                        trim.getCarModel().getBrand() + " " + trim.getCarModel().getModelName() + " " + trim.getTrimName(),
+                        trim.getYear(),
+                        trim.getEngine(),
+                        trim.getTransmission(),
+                        trim.getCarModel().getBasePrice().add(trim.getPriceModifier()),
+                        trim.getCarModel().getMainImageUrl()
+                ))
                 .toList();
     }
 }

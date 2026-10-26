@@ -6,7 +6,7 @@ import {
   MdOutlineCalendarMonth,
   MdOutlineLocalGasStation,
   MdOutlineSettings,
-  MdOutlineSpeed,
+  MdOutlineDirectionsCar,
   MdOutlineBalance
 } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg';
@@ -19,27 +19,20 @@ interface CarDetailsProps {
 }
 
 const defaultCar: CarDetailsData = {
-  id: '1',
-  make: 'Mercedes-Benz',
-  model: 'GLA',
-  trim: 'GLA 180',
-  price: 2064834,
-  isAvailable: true,
-  images: [
-    'https://placehold.co/800x450/2e2e2e/cec6bd?text=Mercedes-Benz+GLA',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Interior',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Side',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Back',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Trunk'
-  ],
-  exteriorColor: 'Чорний',
-  interiorColor: 'Темний',
-  specs: {
-    year: '2023',
-    engine: '1.3 л Бензин',
-    transmission: 'Автомат',
-    mileage: '0 км'
-  }
+  id: 1,
+  brand: "BMW",
+  modelName: "M4",
+  trimName: "Competition",
+  year: 2023,
+  engine: "3.0L Twin-Turbo I6",
+  transmission: "AUTOMATIC",
+  bodyType: "COUPE",
+  price: 85000.00,
+  galleryUrls: [
+    "https://placehold.co/800x450/2e2e2e/cec6bd?text=BMW+M4+Front",
+    "https://placehold.co/150x100/2e2e2e/cec6bd?text=Side",
+    "https://placehold.co/150x100/2e2e2e/cec6bd?text=Interior"
+  ]
 };
 
 export function CarDetails({ car = defaultCar }: CarDetailsProps) {
@@ -54,21 +47,20 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
         <section className="car-info-section">
           <header className="car-page-header">
             <div className="car-title-block">
-              <h1 className="car-title">{car.make} {car.model}</h1>
-              <span className="car-trim">{car.trim}</span>
+              <h1 className="car-title">{car.brand} {car.modelName}</h1>
+              <span className="car-trim">{car.trimName}</span>
             </div>
             <div className="car-price-main">{formattedPrice} ₴</div>
           </header>
 
           <div className="car-gallery">
             <div className="car-gallery-main">
-              {car.isAvailable && (
-                <div className="car-availability-badge">В наявності</div>
-              )}
-              <img src={car.images[activeImageIndex]} alt={`${car.make} ${car.model}`} />
+              {/* Hardcoded to true lol */}
+              <div className="car-availability-badge">В наявності</div>
+              <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
             </div>
             <div className="car-gallery-thumbnails">
-              {car.images.map((img, idx) => (
+              {car.galleryUrls.map((img, idx) => (
                 <button
                   key={idx}
                   className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
@@ -99,19 +91,19 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           <div className="car-specs-icons">
             <div className="spec-item">
               <MdOutlineCalendarMonth size={24} />
-              <span>{car.specs.year}</span>
+              <span>{car.year}</span>
             </div>
             <div className="spec-item">
               <MdOutlineLocalGasStation size={24} />
-              <span>{car.specs.engine}</span>
+              <span>{car.engine}</span>
             </div>
             <div className="spec-item">
               <MdOutlineSettings size={24} />
-              <span>{car.specs.transmission}</span>
+              <span>{car.transmission}</span>
             </div>
             <div className="spec-item">
-              <MdOutlineSpeed size={24} />
-              <span>{car.specs.mileage}</span>
+              <MdOutlineDirectionsCar size={24} />
+              <span style={{ textTransform: 'capitalize' }}>{car.bodyType.toLowerCase()}</span>
             </div>
           </div>
 
@@ -170,12 +162,12 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           <div className="summary-panel">
             <div className="summary-header">
               <div className="summary-info">
-                <h3>{car.make} {car.model}</h3>
-                <span className="summary-trim">{car.trim}</span>
+                <h3>{car.brand} {car.modelName}</h3>
+                <span className="summary-trim">{car.trimName}</span>
                 <div className="summary-price">{formattedPrice} ₴</div>
                 <span className="summary-price-note">Зафіксована ціна за обрану комплектацію</span>
               </div>
-              <img src={car.images[0]} alt="Car thumbnail" className="summary-thumbnail" />
+              <img src={car.galleryUrls[0]} alt="Car thumbnail" className="summary-thumbnail" />
             </div>
 
             <div className="summary-actions">

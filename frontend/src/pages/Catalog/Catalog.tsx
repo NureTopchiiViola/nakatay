@@ -28,6 +28,11 @@ interface CatalogResponse {
 }
 
 const PAGE_SIZE = 12;
+const SORT_OPTIONS = [
+  { value: 'carModel.createdAt,desc', label: 'Найновіші' },
+  { value: 'carModel.basePrice,asc', label: 'Від дешевих до дорогих' },
+  { value: 'carModel.basePrice,desc', label: 'Від дорогих до дешевих' },
+];
 
 function formatPrice(value: number) {
   return `${new Intl.NumberFormat('uk-UA').format(value)} ₴`;
@@ -60,6 +65,7 @@ export function Catalog() {
   const [cars, setCars] = useState<CatalogCar[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState(SORT_OPTIONS[0].value);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +91,7 @@ export function Catalog() {
       const params = new URLSearchParams({
         page: String(page),
         size: String(PAGE_SIZE),
+        sort,
       });
       if (query) params.set('query', query);
 
@@ -120,7 +127,7 @@ export function Catalog() {
 
     void loadCars();
     return () => controller.abort();
-  }, [page, query, reloadKey]);
+  }, [page, query, reloadKey, sort]);
 
   const pageNumbers = getPageNumbers(page, totalPages);
 
@@ -128,8 +135,25 @@ export function Catalog() {
     <div className="catalog-page">
       <section className="catalog-content" aria-labelledby="catalog-title">
         <div className="catalog-heading">
-          <h1 id="catalog-title">Автомобілі</h1>
-          <p>Оберіть автомобіль або створіть власну комплектацію.</p>
+          <div>
+            <h1 id="catalog-title">Автомобілі</h1>
+            <p>Оберіть автомобіль або створіть власну комплектацію.</p>
+          </div>
+          <label className="catalog-sort">
+            <span>Сортувати</span>
+            <select
+              aria-label="Сортувати автомобілі"
+              value={sort}
+              onChange={(event) => {
+                setSort(event.target.value);
+                setPage(0);
+              }}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <Input

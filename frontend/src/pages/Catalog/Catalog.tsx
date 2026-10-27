@@ -139,6 +139,21 @@ export function Catalog() {
             <h1 id="catalog-title">Автомобілі</h1>
             <p>Оберіть автомобіль або створіть власну комплектацію.</p>
           </div>
+        </div>
+
+        <div className="catalog-toolbar">
+          <Input
+            aria-label="Пошук автомобілів"
+            className="catalog-search"
+            iconLeft={<MdOutlineSearch size={20} />}
+            placeholder="Пошук за маркою або моделлю"
+            type="search"
+            value={searchInput}
+            onChange={(event) => {
+              setSearchInput(event.target.value);
+              setPage(0);
+            }}
+          />
           <label className="catalog-sort">
             <span>Сортувати</span>
             <select
@@ -155,19 +170,6 @@ export function Catalog() {
             </select>
           </label>
         </div>
-
-        <Input
-          aria-label="Пошук автомобілів"
-          className="catalog-search"
-          iconLeft={<MdOutlineSearch size={20} />}
-          placeholder="Пошук за маркою або моделлю"
-          type="search"
-          value={searchInput}
-          onChange={(event) => {
-            setSearchInput(event.target.value);
-            setPage(0);
-          }}
-        />
 
         {error && (
           <div className="catalog-message catalog-error" role="alert">

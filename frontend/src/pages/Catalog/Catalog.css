@@ -9,10 +9,6 @@
 }
 
 .catalog-heading {
-  align-items: flex-end;
-  display: flex;
-  gap: 1.5rem;
-  justify-content: space-between;
   margin-bottom: 1.5rem;
 }
 
@@ -35,23 +31,23 @@
 }
 
 .catalog-sort > span {
-  color: var(--color-text-secondary);
+  color: var(--color-background);
   font-size: 0.75rem;
 }
 
 .catalog-sort select {
   appearance: none;
-  background-color: var(--color-surface);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23cec6bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-color: #cec6bd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23212121' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-position: right 0.65rem center;
   background-repeat: no-repeat;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 0;
-  color: var(--color-text-primary);
+  border: 1px solid #cec6bd;
+  border-radius: 0.5rem;
+  color: var(--color-background);
   cursor: pointer;
   font: inherit;
   font-size: 0.75rem;
-  min-height: 2.4rem;
+  height: 3rem;
   min-width: 13.5rem;
   padding: 0.4rem 2rem 0.4rem 0.65rem;
 }
@@ -62,29 +58,56 @@
 }
 
 .catalog-sort option {
-  background: var(--color-background);
-  color: var(--color-text-primary);
+  background: #cec6bd;
+  color: var(--color-background);
+}
+
+.catalog-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .catalog-search.input-wrapper {
-  margin-bottom: 1.5rem;
-  max-width: 28rem;
+  flex: 1;
+  margin: 0;
+  max-width: none;
 }
 
 .catalog-search .input-field {
-  background-color: var(--color-surface);
-  border-radius: 0;
+  background-color: #cec6bd;
+  border-color: #cec6bd;
+  border-radius: 0.5rem;
+  color: var(--color-background);
   font-size: 0.85rem;
+  height: 3rem;
+}
+
+.catalog-search .input-field::placeholder {
+  color: #655f58;
 }
 
 .catalog-search .input-icon {
-  color: var(--color-text-secondary);
+  color: var(--color-background);
+}
+
+.catalog-search .input-field:focus {
+  border-color: #655f58;
+}
+
+.catalog-sort select:focus-visible {
+  outline-color: #655f58;
 }
 
 .catalog-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.catalog-grid > .vehicle-card {
+  max-width: none;
 }
 
 .catalog-message {
@@ -215,14 +238,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .catalog-heading {
-    align-items: flex-start;
+  .catalog-toolbar {
+    align-items: stretch;
     flex-direction: column;
+    gap: 0.75rem;
   }
 
   .catalog-sort {
     justify-content: space-between;
-    width: 100%;
   }
 
   .catalog-sort select {

@@ -11,6 +11,7 @@ import {
   MdOutlineBalance
 } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg';
+import { API_BASE_URL } from '../../api';
 import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
@@ -27,12 +28,8 @@ export function CarDetails() {
     const fetchCarData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`https://ignition-arose-confider.ngrok-free.dev/api/cars/${id}`, {
-          method: 'GET',
-          headers: {
-            'ngrok-skip-browser-warning': 'true',
-            'Accept': 'application/json'
-          }
+        const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
+          headers: { Accept: 'application/json' },
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

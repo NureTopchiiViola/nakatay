@@ -1,5 +1,5 @@
 .configurator-page {
-  --cfg-background: #161818;
+  --cfg-background: var(--color-background);
   --cfg-surface: #343636;
   --cfg-ink: #e7e4de;
   --cfg-muted: #a6a49e;
@@ -11,23 +11,6 @@
   padding-top: 80px;
   font-size: 14px;
 }
-
-.app-layout:has(.configurator-page) { background: #161818; }
-.app-layout:has(.configurator-page) .site-header {
-  background: #343636;
-  border: 0;
-  color: #cec6bd;
-  padding-inline: max(32px, calc((100% - 1280px) / 2));
-}
-.app-layout:has(.configurator-page) .site-header .wordmark,
-.app-layout:has(.configurator-page) .main-nav a { color: #cec6bd; }
-.app-layout:has(.configurator-page) .main-nav a.active { color: #fff; text-decoration: underline; text-underline-offset: 6px; }
-.app-layout:has(.configurator-page) .header-actions .btn,
-.app-layout:has(.configurator-page) .header-actions .header-search .input-field,
-.app-layout:has(.configurator-page) .header-actions .header-search .input-icon,
-.app-layout:has(.configurator-page) .header-actions .header-search .input-icon svg { color: #cec6bd !important; }
-.app-layout:has(.configurator-page) .header-actions .header-search.input-wrapper { border-color: #cec6bd !important; }
-.app-layout:has(.configurator-page) .header-actions .header-search .input-field::placeholder { color: #cec6bd !important; }
 
 .configurator-page button, .configurator-page input { font: inherit; }
 .configurator-page button { cursor: pointer; }
@@ -162,11 +145,6 @@
 .configurator-page .configurator-primary { border: 1px solid var(--cfg-accent); color: #212121; background: var(--cfg-accent); }
 .configurator-page .configurator-primary:hover { background: #ddd7d0; }
 
-.configurator-page .site-footer { max-width: 1280px; margin: 110px auto 0; background: transparent; color: var(--cfg-ink); padding: 32px 0 55px; gap: 60px 30px; }
-.configurator-page .site-footer .wordmark, .configurator-page .site-footer nav a { color: var(--cfg-ink); }
-.configurator-page .site-footer nav a { font-size: 12px; }
-.configurator-page .social-links img { filter: none; width: 18px; height: 18px; }
-.configurator-page .footer-bottom { padding-top: 35px; border-color: #353835; color: var(--cfg-accent); }
 .configurator-notice { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 20; width: max-content; max-width: calc(100% - 32px); pointer-events: none; }
 .configurator-notice > span { display: block; color: #212121; background: var(--cfg-accent); border: 1px solid #ddd7d0; padding: 14px 22px; box-shadow: 0 6px 30px #0006; }
 .configurator-dialog { background: #2e3130; color: var(--cfg-ink); border: 1px solid var(--cfg-border); padding: 40px 28px 28px; width: min(520px, calc(100% - 32px)); max-height: calc(100svh - 48px); }
@@ -190,7 +168,6 @@
   .configurator-panel { padding: 18px 14px; }
   .configurator-summary-cards { gap: 12px; }
   .configurator-paints { gap: 7px; }
-  .configurator-page .site-footer { width: calc(100% - 64px); }
 }
 @media (max-width: 900px) {
   .configurator-page { padding-top: 36px; }
@@ -202,13 +179,10 @@
   .configurator-summary-cards > div { min-height: 100px; }
   .configurator-panel { padding: 22px 20px; }
   .configurator-tab-content { min-height: 340px; }
-  .configurator-page .site-footer { margin-top: 60px; gap: 32px 20px; }
-  .configurator-page .site-footer nav { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
   html:has(.configurator-page), body:has(.configurator-page) { min-width: 320px; }
   .configurator-page { padding-top: 24px; }
-  .app-layout:has(.configurator-page) .site-header { padding-inline: 16px; }
   .configurator-layout { width: calc(100% - 24px); gap: 24px; }
   .configurator-model-header { padding: 16px 12px; gap: 12px; }
   .configurator-model-header h1 { font-size: 19px; }
@@ -238,6 +212,5 @@
   .configurator-checkout-actions { gap: 6px; }
   .configurator-checkout-actions button { font-size: 10px; gap: 4px; }
   .configurator-checkout-actions svg { font-size: 16px; }
-  .configurator-page .site-footer { width: calc(100% - 40px); margin-top: 44px; padding-bottom: 32px; }
   .configurator-total { font-size: 13px; }
 }

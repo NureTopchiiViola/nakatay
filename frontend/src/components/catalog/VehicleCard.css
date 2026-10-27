@@ -1,6 +1,7 @@
 .vehicle-card {
   background-color: var(--color-surface);
-  border-radius: 0px;
+  border: 1px solid rgb(206 198 189 / 16%);
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -11,9 +12,16 @@
 /* Image Box */
 .vehicle-card-image-wrapper {
   aspect-ratio: 16 / 9;
-  background-color: var(--color-background);
+  align-items: center;
+  background: linear-gradient(145deg, #363b3d, #202323);
+  color: var(--color-text-secondary);
+  display: flex;
   overflow: hidden;
   width: 100%;
+}
+
+.vehicle-card-image-wrapper.image-failed {
+  justify-content: center;
 }
 
 .vehicle-card-image {
@@ -23,24 +31,30 @@
   width: 100%;
 }
 
+.vehicle-card-image-placeholder {
+  height: 3rem;
+  opacity: 0.6;
+  width: 3rem;
+}
+
 /* Card Content */
 .vehicle-card-body {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 1.1rem;
 }
 
 .vehicle-card-header {
   align-items: flex-start;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .vehicle-card-title {
   color: var(--color-text-primary);
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
 }
@@ -48,24 +62,47 @@
 .vehicle-card-year {
   color: var(--color-text-secondary);
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
 .vehicle-card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.vehicle-card-tags .tag {
+  font-size: 0.78rem;
+  gap: 0.45rem;
+  padding: 0.35rem 0.6rem;
+}
+
+.vehicle-card-tags .tag-icon img {
+  height: 1.1rem;
+  width: 1.1rem;
 }
 
 .vehicle-card-price {
   color: var(--color-text-primary);
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .vehicle-card-action {
   width: 100%;
+}
+
+.vehicle-card .btn-icon-only {
+  height: 2.4rem;
+  width: 2.4rem;
+}
+
+.vehicle-card-action {
+  font-size: 0.82rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  text-decoration: none;
 }

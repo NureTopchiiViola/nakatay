@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
-import { Footer } from '../../components/layout/Footer';
 import { CarViewer } from './CarViewer';
 import {
   BASE_PRICE, MODEL_NAME, PAINTS, WHEELS, INTERIORS, DECORS, PACKAGES, EXTRAS,
@@ -213,7 +212,6 @@ function ConfiguratorPage({ search }: { search: string }) {
         </div>
       </section>
     </div>
-    <Footer />
     <div className="configurator-notice" role="status" aria-live="polite">{notice && <span>{notice}</span>}</div>
     <dialog className="configurator-dialog" ref={dialogRef} onCancel={() => setModal(null)} onClose={() => setModal(null)}>
       <button type="button" className="configurator-dialog-close" onClick={() => setModal(null)} aria-label="Закрити"><MdClose /></button>

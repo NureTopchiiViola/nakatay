@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdArrowBack, MdArrowForward } from 'react-icons/md';
+import { MdArrowBack, MdArrowForward, MdOutlineSearch } from 'react-icons/md';
 import { API_BASE_URL } from '../../api';
 import { VehicleCard } from '../../components/catalog/VehicleCard';
 import type { VehicleCardProps } from '../../components/catalog/VehicleCard';
+import { Input } from '../../components/ui/Input';
 import './Catalog.css';
 
 interface CatalogCar extends VehicleCardProps {
@@ -57,11 +58,22 @@ function getPageNumbers(currentPage: number, totalPages: number) {
 
 export function Catalog() {
   const [cars, setCars] = useState<CatalogCar[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setQuery(searchInput.trim());
+      setPage(0);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -74,6 +86,7 @@ export function Catalog() {
         page: String(page),
         size: String(PAGE_SIZE),
       });
+      if (query) params.set('query', query);
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/cars/search?${params}`, {
@@ -107,7 +120,7 @@ export function Catalog() {
 
     void loadCars();
     return () => controller.abort();
-  }, [page, reloadKey]);
+  }, [page, query, reloadKey]);
 
   const pageNumbers = getPageNumbers(page, totalPages);
 
@@ -118,6 +131,19 @@ export function Catalog() {
           <h1 id="catalog-title">Автомобілі</h1>
           <p>Оберіть автомобіль або створіть власну комплектацію.</p>
         </div>
+
+        <Input
+          aria-label="Пошук автомобілів"
+          className="catalog-search"
+          iconLeft={<MdOutlineSearch size={20} />}
+          placeholder="Пошук за маркою або моделлю"
+          type="search"
+          value={searchInput}
+          onChange={(event) => {
+            setSearchInput(event.target.value);
+            setPage(0);
+          }}
+        />
 
         {error && (
           <div className="catalog-message catalog-error" role="alert">
@@ -134,7 +160,7 @@ export function Catalog() {
 
         {!error && !isLoading && cars.length === 0 && (
           <div className="catalog-message">
-            <h2>Автомобілів поки немає</h2>
+            <h2>{query ? 'Автомобілів за запитом не знайдено' : 'Автомобілів поки немає'}</h2>
           </div>
         )}
 

@@ -1,8 +1,8 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { CarDetails } from './pages/CarDetails/CarDetails';
 import { CarComparison } from './pages/CarComparison/CarComparison';
+import { Configurator } from './pages/Configurator/Configurator';
 import './App.css';
 
 export default function App() {
@@ -27,6 +27,7 @@ export default function App() {
 
             {/*  порівняння */}
             <Route path="/compare" element={<CarComparison />} />
+            <Route path="/create" element={<Configurator />} />
           </Routes>
         </main>
       </div>

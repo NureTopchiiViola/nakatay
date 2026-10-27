@@ -1,9 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Header } from './components/layout/Header';
-import { CarDetails } from './pages/CarDetails/CarDetails';
-import { CarComparison } from './pages/CarComparison/CarComparison';
-import { Configurator } from './pages/Configurator/Configurator';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
+import { Footer } from './components/layout/Footer';
+import { Header } from './components/layout/Header';
+import { Catalog } from './pages/Catalog/Catalog';
+import { CarComparison } from './pages/CarComparison/CarComparison';
+import { CarDetails } from './pages/CarDetails/CarDetails';
+import { Configurator } from './pages/Configurator/Configurator';
+import { NotFound } from './pages/NotFound/NotFound';
 
 export default function App() {
   return (
@@ -13,14 +16,7 @@ export default function App() {
         
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Navigate to="/catalog" replace />} />
-            
-            {/* тут поки що нічого немає */}
-            <Route path="/catalog" element={
-              <div style={{ padding: '4rem', textAlign: 'center' }}>
-                <h2>Каталог авто (в розробці)</h2>
-              </div>
-            } />
+            <Route path="/" element={<Catalog />} />
 
             {/* dynamic URL для конкретного авто (id) */}
             <Route path="/cars/:id" element={<CarDetails />} />
@@ -28,8 +24,11 @@ export default function App() {
             {/*  порівняння */}
             <Route path="/compare" element={<CarComparison />} />
             <Route path="/create" element={<Configurator />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </Router>
   );

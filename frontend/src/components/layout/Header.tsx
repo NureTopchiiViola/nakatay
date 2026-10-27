@@ -1,44 +1,28 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { MdOutlineSearch, MdOutlinePerson, MdOutlineFavoriteBorder } from 'react-icons/md';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 
 export function Header() {
-  // Отримуємо поточний шлях з URL
-  const location = useLocation();
-  const currentPath = location.pathname;
-
   return (
     <header className="site-header">
-      <Link aria-label="Nakatay — на головну" className="wordmark" to="/catalog">
+      <Link aria-label="Nakatay — на головну" className="wordmark" to="/">
         nakatay
       </Link>
 
       <nav aria-label="Основна навігація" className="main-nav">
-        <Link 
-          to="/catalog" 
-          className={currentPath.startsWith('/catalog') ? 'active' : ''}
-        >
+        <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : undefined}>
           Автомобілі
-        </Link>
-        <Link 
-          to="/test-drive" 
-          className={currentPath === '/test-drive' ? 'active' : ''}
-        >
+        </NavLink>
+        <NavLink to="/test-drive" className={({ isActive }) => isActive ? 'active' : undefined}>
           Тест-драйв
-        </Link>
-        <Link 
-          to="/create" 
-          className={currentPath === '/create' ? 'active' : ''}
-        >
+        </NavLink>
+        <NavLink to="/create" className={({ isActive }) => isActive ? 'active' : undefined}>
           Створити
-        </Link>
-        <Link 
-          to="/compare" 
-          className={currentPath === '/compare' ? 'active' : ''}
-        >
+        </NavLink>
+        <NavLink to="/compare" className={({ isActive }) => isActive ? 'active' : undefined}>
           Порівняти
-        </Link>
+        </NavLink>
       </nav>
 
       <div className="header-actions">

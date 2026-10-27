@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   MdOutlineShare, 
   MdOutlineFavoriteBorder, 
@@ -6,7 +7,7 @@ import {
   MdOutlineCalendarMonth,
   MdOutlineLocalGasStation,
   MdOutlineSettings,
-  MdOutlineSpeed,
+  MdOutlineDirectionsCar,
   MdOutlineBalance
 } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg';
@@ -14,37 +15,47 @@ import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
 
-interface CarDetailsProps {
-  car?: CarDetailsData;
-}
-
-const defaultCar: CarDetailsData = {
-  id: '1',
-  make: 'Mercedes-Benz',
-  model: 'GLA',
-  trim: 'GLA 180',
-  price: 2064834,
-  isAvailable: true,
-  images: [
-    'https://placehold.co/800x450/2e2e2e/cec6bd?text=Mercedes-Benz+GLA',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Interior',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Side',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Back',
-    'https://placehold.co/150x100/2e2e2e/cec6bd?text=Trunk'
-  ],
-  exteriorColor: 'Чорний',
-  interiorColor: 'Темний',
-  specs: {
-    year: '2023',
-    engine: '1.3 л Бензин',
-    transmission: 'Автомат',
-    mileage: '0 км'
-  }
-};
-
-export function CarDetails({ car = defaultCar }: CarDetailsProps) {
+export function CarDetails() {
+  const { id } = useParams<{ id: string }>(); 
+  
+  const [car, setCar] = useState<CarDetailsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isCompared, setIsCompared] = useState(false);
+
+  useEffect(() => {
+    const fetchCarData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`https://ignition-arose-confider.ngrok-free.dev/api/cars/${id}`, {
+          method: 'GET',
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data: CarDetailsData = await response.json();
+        setCar(data);
+      } catch (error) {
+        console.error("Error fetching car data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) fetchCarData();
+  }, [id]);
+
+  if (isLoading) {
+    return <div style={{ padding: '4rem', textAlign: 'center', color: '#fff' }}>Завантаження даних...</div>;
+  }
+
+  if (!car) {
+    return <div style={{ padding: '4rem', textAlign: 'center', color: '#fff' }}>Автомобіль не знайдено (404)</div>;
+  }
 
   const formattedPrice = new Intl.NumberFormat('uk-UA').format(car.price);
 
@@ -54,30 +65,35 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
         <section className="car-info-section">
           <header className="car-page-header">
             <div className="car-title-block">
-              <h1 className="car-title">{car.make} {car.model}</h1>
-              <span className="car-trim">{car.trim}</span>
+              <h1 className="car-title">{car.brand} {car.modelName}</h1>
+              <span className="car-trim">{car.trimName}</span>
             </div>
             <div className="car-price-main">{formattedPrice} ₴</div>
           </header>
 
           <div className="car-gallery">
             <div className="car-gallery-main">
-              {car.isAvailable && (
-                <div className="car-availability-badge">В наявності</div>
+              <div className="car-availability-badge">В наявності</div>
+              {car.galleryUrls && car.galleryUrls.length > 0 ? (
+                <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
+              ) : (
+                <div style={{ height: '100%', background: '#2e2e2e' }} /> // Fallback if no images
               )}
-              <img src={car.images[activeImageIndex]} alt={`${car.make} ${car.model}`} />
             </div>
-            <div className="car-gallery-thumbnails">
-              {car.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
-                  onClick={() => setActiveImageIndex(idx)}
-                >
-                  <img src={img} alt={`Thumbnail ${idx + 1}`} />
-                </button>
-              ))}
-            </div>
+            
+            {car.galleryUrls && car.galleryUrls.length > 0 && (
+              <div className="car-gallery-thumbnails">
+                {car.galleryUrls.map((img, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
+                    onClick={() => setActiveImageIndex(idx)}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="car-actions-bar">
@@ -99,19 +115,19 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           <div className="car-specs-icons">
             <div className="spec-item">
               <MdOutlineCalendarMonth size={24} />
-              <span>{car.specs.year}</span>
+              <span>{car.year}</span>
             </div>
             <div className="spec-item">
               <MdOutlineLocalGasStation size={24} />
-              <span>{car.specs.engine}</span>
+              <span>{car.engine}</span>
             </div>
             <div className="spec-item">
               <MdOutlineSettings size={24} />
-              <span>{car.specs.transmission}</span>
+              <span>{car.transmission}</span>
             </div>
             <div className="spec-item">
-              <MdOutlineSpeed size={24} />
-              <span>{car.specs.mileage}</span>
+              <MdOutlineDirectionsCar size={24} />
+              <span style={{ textTransform: 'capitalize' }}>{car.bodyType.toLowerCase()}</span>
             </div>
           </div>
 
@@ -170,12 +186,14 @@ export function CarDetails({ car = defaultCar }: CarDetailsProps) {
           <div className="summary-panel">
             <div className="summary-header">
               <div className="summary-info">
-                <h3>{car.make} {car.model}</h3>
-                <span className="summary-trim">{car.trim}</span>
+                <h3>{car.brand} {car.modelName}</h3>
+                <span className="summary-trim">{car.trimName}</span>
                 <div className="summary-price">{formattedPrice} ₴</div>
                 <span className="summary-price-note">Зафіксована ціна за обрану комплектацію</span>
               </div>
-              <img src={car.images[0]} alt="Car thumbnail" className="summary-thumbnail" />
+              {car.galleryUrls && car.galleryUrls.length > 0 && (
+                <img src={car.galleryUrls[0]} alt="Car thumbnail" className="summary-thumbnail" />
+              )}
             </div>
 
             <div className="summary-actions">

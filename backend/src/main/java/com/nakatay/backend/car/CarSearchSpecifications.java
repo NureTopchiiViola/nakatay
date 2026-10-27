@@ -41,6 +41,16 @@ public class CarSearchSpecifications {
                 if (filter.minYear() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("year"), filter.minYear()));
                 if (filter.maxYear() != null) predicates.add(cb.lessThanOrEqualTo(root.get("year"), filter.maxYear()));
 
+                // brand filter
+                if (filter.brands() != null && !filter.brands().isEmpty()) {
+                    predicates.add(carModelJoin.get("brand").in(filter.brands()));
+                }
+
+                // model filter
+                if (filter.models() != null && !filter.models().isEmpty()) {
+                    predicates.add(carModelJoin.get("modelName").in(filter.models()));
+                }
+
                 // body type filter
                 if (filter.bodyTypes() != null && !filter.bodyTypes().isEmpty()) {
                     predicates.add(carModelJoin.get("bodyType").in(filter.bodyTypes()));

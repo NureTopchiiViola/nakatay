@@ -1,17 +1,12 @@
 export interface CarDetailsData {
-  id: string;
-  make: string;
-  model: string;
-  trim: string;
+  id: number;
+  brand: string;
+  modelName: string;
+  trimName: string;
+  year: number;
+  engine: string;
+  transmission: string;
+  bodyType: string;
   price: number;
-  isAvailable: boolean;
-  images: string[];
-  exteriorColor: string;
-  interiorColor: string;
-  specs: {
-    year: string;
-    engine: string;
-    transmission: string;
-    mileage: string;
-  };
+  galleryUrls: string[];
 }

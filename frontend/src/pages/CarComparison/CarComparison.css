@@ -1,0 +1,263 @@
+.comparison-page {
+  background-color: #121212;
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+  font-family: inherit;
+}
+
+.comparison-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.comparison-filter-bar {
+  margin-bottom: 2rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.75rem;
+  user-select: none;
+}
+
+.checkbox-label input[type='checkbox'] {
+  display: none;
+}
+
+.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cec6bd;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.checkbox-label input[type='checkbox']:checked + .custom-checkbox {
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+.checkbox-label input[type='checkbox']:checked + .custom-checkbox::after {
+  content: '✓';
+  color: #121212;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+  color: #cec6bd;
+}
+
+.comparison-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 3rem;
+}
+
+.comparison-grid {
+  display: flex;
+  flex-direction: column;
+  min-width: 650px;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 180px repeat(var(--col-count), minmax(180px, 1fr)) minmax(140px, 1fr);
+  align-items: center;
+}
+
+.row-header {
+  align-items: start;
+  margin-bottom: 1.5rem;
+  padding-top: 1.5rem;
+}
+
+.spec-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
+}
+
+.spec-label-cell {
+  font-size: 0.95rem;
+  color: #cec6bd;
+  padding-right: 1rem;
+}
+
+.car-card-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 0.75rem;
+}
+
+.remove-car-btn {
+  position: absolute;
+  top: 0;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.remove-car-btn:hover {
+  opacity: 0.7;
+}
+
+.car-image-container {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #2b2b2b;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.car-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.car-card-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #ffffff;
+}
+
+.car-card-price {
+  font-size: 0.9rem;
+  color: #cec6bd;
+}
+
+.add-car-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  cursor: pointer;
+  padding: 0 1rem;
+}
+
+.add-car-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.add-car-cell:hover .add-car-content {
+  opacity: 0.8;
+}
+
+.spec-value-cell {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.mobile-spec-label {
+  display: none;
+}
+
+.empty-cell {
+  visibility: hidden;
+}
+
+.comparison-footer-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.comparison-footer-action button {
+  padding: 0.75rem 2rem;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .comparison-page {
+    padding: 2rem 1rem;
+  }
+
+  .comparison-title {
+    font-size: 1.75rem;
+  }
+
+  .comparison-table-wrapper {
+    overflow-x: visible;
+  }
+
+  .comparison-grid {
+    min-width: 100%;
+  }
+
+  .grid-row {
+    grid-template-columns: repeat(var(--col-count), 1fr);
+  }
+
+  .spec-label-cell {
+    display: none;
+  }
+
+  .spec-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem 0;
+  }
+
+  .mobile-spec-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #cec6bd;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    text-align: left;
+  }
+
+  .spec-value-cell {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .spec-row .spec-value-cell {
+    display: grid;
+    grid-template-columns: repeat(var(--col-count), 1fr);
+    width: 100%;
+  }
+}

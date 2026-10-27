@@ -1,6 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { MdOutlineSearch, MdOutlinePerson, MdOutlineFavoriteBorder } from 'react-icons/md';
-import { Input } from '../../components/ui/Input';
+import { MdOutlinePerson, MdOutlineFavoriteBorder } from 'react-icons/md';
 import { Button } from '../../components/ui/Button';
 
 export function Header() {
@@ -26,11 +25,6 @@ export function Header() {
       </nav>
 
       <div className="header-actions">
-        <Input 
-          className="header-search"
-          iconLeft={<MdOutlineSearch size={20} />} 
-          placeholder="Пошук" 
-        />
         <Button 
           variant="ghost" 
           iconLeft={<MdOutlinePerson size={22} />} 

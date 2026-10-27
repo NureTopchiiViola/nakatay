@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdArrowBack, MdArrowForward, MdOutlineSearch } from 'react-icons/md';
+import { MdArrowBack, MdArrowForward, MdFilterList, MdOutlineSearch } from 'react-icons/md';
 import { API_BASE_URL } from '../../api';
 import { VehicleCard } from '../../components/catalog/VehicleCard';
 import type { VehicleCardProps } from '../../components/catalog/VehicleCard';
 import { Input } from '../../components/ui/Input';
+import { CatalogFiltersPanel } from './CatalogFilters';
+import {
+  EMPTY_CATALOG_FILTERS,
+  PRICE_MAX,
+  PRICE_MIN,
+  type CatalogFilterKey,
+  type CatalogFilters,
+  type CatalogRange,
+  YEAR_MAX,
+  YEAR_MIN,
+} from './catalogFilterOptions';
 import './Catalog.css';
 
 interface CatalogCar extends VehicleCardProps {
@@ -66,6 +77,10 @@ export function Catalog() {
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState(SORT_OPTIONS[0].value);
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [priceRange, setPriceRange] = useState<CatalogRange>([PRICE_MIN, PRICE_MAX]);
+  const [yearRange, setYearRange] = useState<CatalogRange>([YEAR_MIN, YEAR_MAX]);
+  const [filters, setFilters] = useState<CatalogFilters>(EMPTY_CATALOG_FILTERS);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +109,14 @@ export function Catalog() {
         sort,
       });
       if (query) params.set('query', query);
+      if (priceRange[0] > PRICE_MIN) params.set('minPrice', String(priceRange[0]));
+      if (priceRange[1] < PRICE_MAX) params.set('maxPrice', String(priceRange[1]));
+      if (yearRange[0] > YEAR_MIN) params.set('minYear', String(yearRange[0]));
+      if (yearRange[1] < YEAR_MAX) params.set('maxYear', String(yearRange[1]));
+      filters.brands.forEach((value) => params.append('brands', value));
+      filters.models.forEach((value) => params.append('models', value));
+      filters.transmissions.forEach((value) => params.append('transmissions', value));
+      filters.bodyTypes.forEach((value) => params.append('bodyTypes', value));
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/cars/search?${params}`, {
@@ -127,9 +150,41 @@ export function Catalog() {
 
     void loadCars();
     return () => controller.abort();
-  }, [page, query, reloadKey, sort]);
+  }, [filters, page, priceRange, query, reloadKey, sort, yearRange]);
 
   const pageNumbers = getPageNumbers(page, totalPages);
+  const hasActiveFilters = Object.values(filters).some((values) => values.length > 0)
+    || priceRange[0] > PRICE_MIN
+    || priceRange[1] < PRICE_MAX
+    || yearRange[0] > YEAR_MIN
+    || yearRange[1] < YEAR_MAX;
+
+  function toggleFilter(key: CatalogFilterKey, value: string) {
+    setFilters((current) => ({
+      ...current,
+      [key]: current[key].includes(value)
+        ? current[key].filter((selected) => selected !== value)
+        : [...current[key], value],
+    }));
+    setPage(0);
+  }
+
+  function resetFilters() {
+    setFilters(EMPTY_CATALOG_FILTERS);
+    setPriceRange([PRICE_MIN, PRICE_MAX]);
+    setYearRange([YEAR_MIN, YEAR_MAX]);
+    setPage(0);
+  }
+
+  function updatePriceRange(range: CatalogRange) {
+    setPriceRange(range);
+    setPage(0);
+  }
+
+  function updateYearRange(range: CatalogRange) {
+    setYearRange(range);
+    setPage(0);
+  }
 
   return (
     <div className="catalog-page">
@@ -154,23 +209,48 @@ export function Catalog() {
               setPage(0);
             }}
           />
-          <label className="catalog-sort">
-            <span>Сортувати</span>
-            <select
-              aria-label="Сортувати автомобілі"
-              value={sort}
-              onChange={(event) => {
-                setSort(event.target.value);
-                setPage(0);
-              }}
+          <div className="catalog-toolbar-actions">
+            <button
+              type="button"
+              className="catalog-filter-toggle"
+              aria-controls="catalog-filters"
+              aria-expanded={filtersVisible}
+              onClick={() => setFiltersVisible((visible) => !visible)}
             >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
+              <MdFilterList aria-hidden="true" />
+              {filtersVisible ? 'Приховати фільтри' : 'Показати фільтри'}
+            </button>
+            <label className="catalog-sort">
+              <select
+                aria-label="Сортувати автомобілі"
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value);
+                  setPage(0);
+                }}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
+        <div className={`catalog-results-layout ${filtersVisible ? '' : 'filters-hidden'}`}>
+          <CatalogFiltersPanel
+            filters={filters}
+            priceRange={priceRange}
+            yearRange={yearRange}
+            isVisible={filtersVisible}
+            hasActiveFilters={hasActiveFilters}
+            onToggleFilter={toggleFilter}
+            onReset={resetFilters}
+            onPriceRangeChange={updatePriceRange}
+            onYearRangeChange={updateYearRange}
+          />
+
+          <section className="catalog-results" aria-label="Автомобілі каталогу">
         {error && (
           <div className="catalog-message catalog-error" role="alert">
             <p>Не вдалося завантажити автомобілі: {error}</p>
@@ -186,50 +266,49 @@ export function Catalog() {
 
         {!error && !isLoading && cars.length === 0 && (
           <div className="catalog-message">
-            <h2>{query ? 'Автомобілів за запитом не знайдено' : 'Автомобілів поки немає'}</h2>
+            <h2>{query || hasActiveFilters ? 'Автомобілів за заданими параметрами не знайдено' : 'Автомобілів поки немає'}</h2>
           </div>
         )}
 
         {!error && !isLoading && cars.length > 0 && (
-          <>
-            <div className="catalog-grid">
-              {cars.map((car) => <VehicleCard key={car.id} {...car} />)}
-            </div>
-
-            {totalPages > 1 && (
-              <nav className="catalog-pagination" aria-label="Сторінки каталогу">
+          <div className="catalog-grid">
+            {cars.map((car) => <VehicleCard key={car.id} {...car} />)}
+          </div>
+        )}
+          </section>
+        </div>
+        {!error && !isLoading && cars.length > 0 && totalPages > 1 && (
+          <nav className="catalog-pagination" aria-label="Сторінки каталогу">
+            <button
+              type="button"
+              aria-label="Попередня сторінка"
+              disabled={page === 0}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              <MdArrowBack aria-hidden="true" />
+            </button>
+            {pageNumbers.map((pageNumber, index) => (
+              <span className="catalog-page-number-wrap" key={pageNumber}>
+                {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && <span aria-hidden="true">…</span>}
                 <button
                   type="button"
-                  aria-label="Попередня сторінка"
-                  disabled={page === 0}
-                  onClick={() => setPage((current) => current - 1)}
+                  aria-current={pageNumber === page ? 'page' : undefined}
+                  className={pageNumber === page ? 'current' : ''}
+                  onClick={() => setPage(pageNumber)}
                 >
-                  <MdArrowBack aria-hidden="true" />
+                  {pageNumber + 1}
                 </button>
-                {pageNumbers.map((pageNumber, index) => (
-                  <span className="catalog-page-number-wrap" key={pageNumber}>
-                    {index > 0 && pageNumber - pageNumbers[index - 1] > 1 && <span aria-hidden="true">…</span>}
-                    <button
-                      type="button"
-                      aria-current={pageNumber === page ? 'page' : undefined}
-                      className={pageNumber === page ? 'current' : ''}
-                      onClick={() => setPage(pageNumber)}
-                    >
-                      {pageNumber + 1}
-                    </button>
-                  </span>
-                ))}
-                <button
-                  type="button"
-                  aria-label="Наступна сторінка"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((current) => current + 1)}
-                >
-                  <MdArrowForward aria-hidden="true" />
-                </button>
-              </nav>
-            )}
-          </>
+              </span>
+            ))}
+            <button
+              type="button"
+              aria-label="Наступна сторінка"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              <MdArrowForward aria-hidden="true" />
+            </button>
+          </nav>
         )}
       </section>
 

@@ -1,0 +1,109 @@
+.range-filter {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+  min-width: 0;
+  padding: 1rem 0;
+}
+
+.range-filter legend {
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0 0.4rem 0 0;
+}
+
+.range-filter-values {
+  display: flex;
+  font-size: 0.72rem;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.range-filter-slider {
+  height: 1.25rem;
+  position: relative;
+  touch-action: pan-y;
+}
+
+.range-filter-track,
+.range-filter-selected-track {
+  border-radius: 999px;
+  height: 3px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.range-filter-track {
+  background: #66625d;
+  inset-inline: 0;
+}
+
+.range-filter-selected-track {
+  background: var(--color-text-primary);
+  left: var(--range-start);
+  right: calc(100% - var(--range-end));
+}
+
+.range-filter-input {
+  appearance: none;
+  background: none;
+  height: 1.25rem;
+  inset: 0;
+  margin: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+.range-filter-input::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 3px;
+}
+
+.range-filter-input::-moz-range-track {
+  background: transparent;
+  height: 3px;
+}
+
+.range-filter-input::-webkit-slider-thumb {
+  appearance: none;
+  background: var(--color-text-primary);
+  border: 2px solid var(--color-background);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-text-primary);
+  cursor: grab;
+  height: 13px;
+  margin-top: -5px;
+  pointer-events: auto;
+  width: 13px;
+}
+
+.range-filter-input::-moz-range-thumb {
+  background: var(--color-text-primary);
+  border: 2px solid var(--color-background);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-text-primary);
+  cursor: grab;
+  height: 9px;
+  pointer-events: auto;
+  width: 9px;
+}
+
+.range-filter-input:active::-webkit-slider-thumb,
+.range-filter-input:active::-moz-range-thumb {
+  cursor: grabbing;
+}
+
+.range-filter-input:focus-visible {
+  outline: none;
+}
+
+.range-filter-input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-text-primary);
+}
+
+.range-filter-input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--color-text-primary);
+}

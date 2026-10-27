@@ -44,8 +44,8 @@ export function CatalogFiltersPanel({
         </button>
       </div>
       {FILTER_GROUPS.map((group) => (
-        <fieldset className="catalog-filter-group" key={group.key}>
-          <legend>{group.title}</legend>
+        <details className="catalog-filter-group" key={group.key} open>
+          <summary>{group.title}</summary>
           <div className="catalog-filter-options">
             {(group.options as readonly CatalogFilterOption[]).map(([value, label]) => {
               const checked = filters[group.key].includes(value);
@@ -61,7 +61,7 @@ export function CatalogFiltersPanel({
               );
             })}
           </div>
-        </fieldset>
+        </details>
       ))}
       <RangeFilter
         id="catalog-price"

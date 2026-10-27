@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MdArrowBack, MdArrowForward, MdFilterList, MdOutlineSearch } from 'react-icons/md';
 import { API_BASE_URL } from '../../api';
+import catalogUnavailableIcon from '../../assets/car-settings.svg';
 import { VehicleCard } from '../../components/catalog/VehicleCard';
 import type { VehicleCardProps } from '../../components/catalog/VehicleCard';
 import { Input } from '../../components/ui/Input';
@@ -176,6 +177,12 @@ export function Catalog() {
     setPage(0);
   }
 
+  function resetSearchAndFilters() {
+    resetFilters();
+    setSearchInput('');
+    setQuery('');
+  }
+
   function updatePriceRange(range: CatalogRange) {
     setPriceRange(range);
     setPage(0);
@@ -253,9 +260,11 @@ export function Catalog() {
           <section className="catalog-results" aria-label="Автомобілі каталогу">
         {error && (
           <div className="catalog-message catalog-error" role="alert">
-            <p>Не вдалося завантажити автомобілі: {error}</p>
+            <img src={catalogUnavailableIcon} alt="" aria-hidden="true" />
+            <h2>Не вдалося завантажити каталог</h2>
+            <p>Будь ласка, перевірте з’єднання з інтернетом або спробуйте ще раз.</p>
             <button type="button" onClick={() => setReloadKey((key) => key + 1)}>
-              Спробувати ще раз
+              Оновити сторінку
             </button>
           </div>
         )}
@@ -265,8 +274,13 @@ export function Catalog() {
         )}
 
         {!error && !isLoading && cars.length === 0 && (
-          <div className="catalog-message">
-            <h2>{query || hasActiveFilters ? 'Автомобілів за заданими параметрами не знайдено' : 'Автомобілів поки немає'}</h2>
+          <div className="catalog-message catalog-empty" role="status">
+            <img src={catalogUnavailableIcon} alt="" aria-hidden="true" />
+            <h2>За вашим запитом авто не знайдено</h2>
+            <p>Спробуйте змінити параметри пошуку або скинути фільтри, щоб побачити інші варіанти.</p>
+            <button type="button" onClick={resetSearchAndFilters}>
+              Скинути фільтри
+            </button>
           </div>
         )}
 

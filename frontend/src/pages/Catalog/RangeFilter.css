@@ -1,6 +1,5 @@
 .range-filter {
   border: 0;
-  border-top: 1px solid var(--color-border);
   margin: 0;
   min-width: 0;
   padding: 1rem 0;
@@ -11,6 +10,11 @@
   font-size: 0.8rem;
   font-weight: 700;
   padding: 0 0.4rem 0 0;
+}
+
+.range-filter summary:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
 }
 
 .range-filter-values {

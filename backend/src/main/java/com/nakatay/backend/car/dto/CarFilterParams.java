@@ -9,6 +9,12 @@ public record CarFilterParams(
         @Schema(description = "Пошуковий запит (бренд, модель або назва комплектації)", example = "BMW M4")
         String query,
 
+        @Schema(description = "Список брендів", example = "[\"BMW\", \"Toyota\"]")
+        List<String> brands,
+
+        @Schema(description = "Список моделей", example = "[\"X3\", \"RAV4\"]")
+        List<String> models,
+
         @Schema(description = "Мінімальна підсумкова ціна", example = "30000.00")
         BigDecimal minPrice,
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MdOutlineEvStation, MdOutlineSettings, MdOutlineBalance } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg'; // Your custom icon
 import { Button } from '../ui/Button';

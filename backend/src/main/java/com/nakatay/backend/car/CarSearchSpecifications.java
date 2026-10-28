@@ -30,12 +30,17 @@ public class CarSearchSpecifications {
             if (filter != null) {
                 // search filter
                 if (filter.query() != null && !filter.query().isBlank()) {
-                    String searchPattern = "%" + filter.query().toLowerCase() + "%";
-                    Predicate brandMatch = cb.like(cb.lower(carModelJoin.get("brand")), searchPattern);
-                    Predicate modelMatch = cb.like(cb.lower(carModelJoin.get("modelName")), searchPattern);
-                    Predicate trimMatch = cb.like(cb.lower(root.get("trimName")), searchPattern);
+                    String[] words = filter.query().toLowerCase().trim().split("\\s+");
+                    for (String word : words) {
+                        String pattern = "%" + word + "%";
+                        Predicate wordMatches = cb.or(
+                                cb.like(cb.lower(carModelJoin.get("brand")), pattern),
+                                cb.like(cb.lower(carModelJoin.get("modelName")), pattern),
+                                cb.like(cb.lower(root.get("trimName")), pattern)
+                        );
 
-                    predicates.add(cb.or(brandMatch, modelMatch, trimMatch));
+                        predicates.add(wordMatches);
+                    }
                 }
                 // year filter
                 if (filter.minYear() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("year"), filter.minYear()));

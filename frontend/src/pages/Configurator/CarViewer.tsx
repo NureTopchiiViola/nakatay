@@ -65,9 +65,15 @@ export function CarViewer({ configuration, cameraView, onReset }: CarViewerProps
     <p className="configurator-viewer-hint">{fullscreenError || (mode === '3d' ? 'Перетягніть для обертання · Прокрутіть для наближення' : 'Оберіть ракурс для перегляду')}</p>
     </div>
     <div className="configurator-model-selector" role="group" aria-label="Модель автомобіля">
-      <button type="button" aria-pressed={modelSource === 'glb'} onClick={() => setModelSource('glb')}>Ваша модель</button>
+      <button type="button" aria-pressed={modelSource === 'glb'} onClick={() => setModelSource('glb')}>BMW E46</button>
       <button type="button" aria-pressed={modelSource === 'demo'} onClick={() => setModelSource('demo')}>Демо з модифікаціями</button>
     </div>
-    {modelSource === 'glb' && <p className="configurator-asset-note">У цій моделі змінюється колір кузова. Для перегляду змін дисків, салону та опцій оберіть «Демо з модифікаціями».</p>}
+    {modelSource === 'glb' && <p className="configurator-asset-note">На BMW змінюються колір кузова, диски, оббивка, вставки та LED-фари. Night Vision і реєстратор показані як 3D-макети обладнання; екран Night Vision — демонстраційний. Панорамний дах недоступний.</p>}
+    <p className="configurator-model-credit">
+      3D-модель: <a href="https://sketchfab.com/3d-models/1999-bmw-e46-328i-sport-5fce3b693344450380b0112a4d21cfe5" target="_blank" rel="noreferrer">1999 BMW E46 328i Sport</a>
+      {' — '}<a href="https://sketchfab.com/ddiaz-design" target="_blank" rel="noreferrer">Ddiaz Design</a>
+      {' · '}<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noreferrer">CC BY-NC-SA 4.0</a>.
+      {' '}Адаптація: масштаб, колір кузова, змінні диски, LED-фари та процедурно допрацьований салон. Ліцензія моделі дозволяє лише некомерційне використання; її адаптації поширюються на тих самих умовах.
+    </p>
   </>;
 }

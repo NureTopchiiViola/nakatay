@@ -1,5 +1,5 @@
 export const BASE_PRICE = 1_850_000;
-export const MODEL_NAME = 'NAKATAY Horizon GT-3D';
+export const MODEL_NAME = 'BMW E46 328i Sport · 1999';
 
 export const PAINTS = [
   { id: 'graphite', name: 'Graphite Metallic', shortName: 'Graphite', color: '#53565f', price: 0 },
@@ -33,11 +33,11 @@ export const PACKAGES = [
 ] as const;
 
 export const EXTRAS = [
-  { id: 'spoiler', name: 'Карбоновий спойлер GT', description: 'Доступний із пакетом Sport Track Pro', price: 32_000, section: 'exterior' },
-  { id: 'matrix', name: 'Матричні світлодіодні фари Matrix LED', description: 'Адаптивне освітлення дороги', price: 54_000, section: 'exterior' },
-  { id: 'roof', name: 'Панорамний скляний дах', description: 'З електроприводом та шторкою', price: 45_000, section: 'options' },
-  { id: 'night', name: 'Система нічного бачення (Night Vision)', description: 'Інфрачервоне виявлення пішоходів', price: 62_000, section: 'options' },
-  { id: 'recorder', name: 'Вбудований 4K відеореєстратор', description: 'Запис з передньої та задньої камери', price: 15_000, section: 'options' },
+  { id: 'spoiler', name: 'Карбоновий спойлер GT', description: 'Доступний із пакетом Sport Track Pro', price: 32_000, section: 'exterior', available: true },
+  { id: 'matrix', name: 'Матричні світлодіодні фари Matrix LED', description: 'Адаптивне освітлення дороги', price: 54_000, section: 'exterior', available: true },
+  { id: 'roof', name: 'Панорамний скляний дах', description: 'Недоступно для BMW E46', price: 45_000, section: 'options', available: false },
+  { id: 'night', name: 'Система нічного бачення (Night Vision)', description: 'Камера та демонстраційний екран у салоні', price: 62_000, section: 'options', available: true },
+  { id: 'recorder', name: 'Вбудований 4K відеореєстратор', description: '3D-макет передньої та задньої камер', price: 15_000, section: 'options', available: true },
 ] as const;
 
 export type ExtraId = typeof EXTRAS[number]['id'];
@@ -59,7 +59,7 @@ export function normalizeConfiguration(value: unknown): Configuration {
   const pick = <T extends string>(items: readonly { id: T }[], candidate: unknown, fallback: T): T =>
     items.find(item => item.id === candidate)?.id ?? fallback;
   const selectedPackage = pick(PACKAGES, source.package, DEFAULT_CONFIGURATION.package);
-  const extras = EXTRAS.filter(item => Array.isArray(source.extras) && source.extras.includes(item.id))
+  const extras = EXTRAS.filter(item => item.available && Array.isArray(source.extras) && source.extras.includes(item.id))
     .filter(item => item.id !== 'spoiler' || selectedPackage === 'sport').map(item => item.id);
   return {
     paint: pick(PAINTS, source.paint, DEFAULT_CONFIGURATION.paint),

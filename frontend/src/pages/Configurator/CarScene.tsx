@@ -27,6 +27,7 @@ export default function CarScene({ configuration, mode, angle, cameraView, reset
     orthographic: THREE.OrthographicCamera;
     controls: OrbitControls;
     renderer: THREE.WebGLRenderer;
+    interiorLight: THREE.PointLight;
     draw: () => void;
   } | null>(null);
   const [error, setError] = useState(false);
@@ -73,6 +74,10 @@ export default function CarScene({ configuration, mode, angle, cameraView, reset
     light.shadow.camera.bottom = -4;
     light.shadow.normalBias = 0.025;
     scene.add(light);
+    const interiorLight = new THREE.PointLight(0xfff0db, 1.2, 3, 2);
+    interiorLight.position.set(-0.2, 1.25, 0.1);
+    interiorLight.visible = false;
+    scene.add(interiorLight);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.26 }));
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -0.01;
@@ -92,7 +97,7 @@ export default function CarScene({ configuration, mode, angle, cameraView, reset
     const draw = () => { if (runtime.current) renderer.render(scene, runtime.current.camera); };
     const car = new THREE.Group();
     scene.add(car);
-    runtime.current = { scene, car, camera: perspective, perspective, orthographic, controls, renderer, draw };
+    runtime.current = { scene, car, camera: perspective, perspective, orthographic, controls, renderer, interiorLight, draw };
     controls.addEventListener('change', draw);
     const handleKeyDown = (event: KeyboardEvent) => {
       const state = runtime.current;
@@ -209,19 +214,25 @@ export default function CarScene({ configuration, mode, angle, cameraView, reset
     const state = runtime.current;
     if (!state) return;
     const isInterior = cameraView === 'interior';
+    const isBmwInterior = isInterior && modelSource === 'glb';
+    state.interiorLight.visible = isBmwInterior;
     const radians = angle * Math.PI / 180;
     state.camera = mode === '3d' ? state.perspective : state.orthographic;
+    state.perspective.fov = isBmwInterior ? 65 : 35;
+    state.perspective.updateProjectionMatrix();
     state.controls.object = state.camera;
     state.controls.enableRotate = mode === '3d';
-    state.controls.minDistance = isInterior ? 1 : 2.8;
-    state.controls.maxDistance = isInterior ? 4 : 11;
-    state.controls.target.set(isInterior ? -0.15 : 0, isInterior ? 1.15 : 0.8, 0);
-    if (isInterior) {
+    state.controls.minDistance = isBmwInterior ? 0.15 : isInterior ? 1 : 2.8;
+    state.controls.maxDistance = isBmwInterior ? 2 : isInterior ? 4 : 11;
+    state.controls.target.set(isBmwInterior ? 0.35 : isInterior ? -0.15 : 0, isBmwInterior ? 0.83 : isInterior ? 1.15 : 0.8, 0);
+    if (isBmwInterior) {
+      state.camera.position.set(-0.35 + Math.cos(radians) * 0.15, 1.16, Math.sin(radians) * 0.25);
+    } else if (isInterior) {
       state.camera.position.set(-0.15 + Math.cos(radians + Math.PI / 6) * 2.5, 3.5, Math.sin(radians + Math.PI / 6) * 2.5);
     } else {
       state.camera.position.set(Math.cos(radians) * 10, mode === '2d' ? 0.82 : 2.5, Math.sin(radians) * 10);
     }
-    state.orthographic.zoom = isInterior ? 1.8 : 1;
+    state.orthographic.zoom = isBmwInterior ? 4 : isInterior ? 1.8 : 1;
     state.orthographic.updateProjectionMatrix();
     state.controls.update();
     state.draw();

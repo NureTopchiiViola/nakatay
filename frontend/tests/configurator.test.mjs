@@ -15,9 +15,9 @@ test('price includes every selected modification exactly once', () => {
     extras: ['spoiler', 'matrix', 'roof', 'night', 'recorder', 'roof'],
   };
   const quote = getQuote(configuration);
-  assert.equal(quote.optionsPrice, 508_000);
-  assert.equal(quote.total, 2_358_000);
-  assert.equal(quote.lines.length, 9);
+  assert.equal(quote.optionsPrice, 463_000);
+  assert.equal(quote.total, 2_313_000);
+  assert.equal(quote.lines.length, 8);
 });
 
 test('spoiler requires the sport package and is removed when changing package', () => {
@@ -46,4 +46,14 @@ test('malformed draft data falls back to valid defaults', () => {
   for (const value of [null, undefined, [], 'invalid', { paint: 42, extras: {}, package: '__proto__' }]) {
     assert.deepEqual(normalizeConfiguration(value), DEFAULT_CONFIGURATION);
   }
+});
+
+test('unavailable panoramic roof is removed from drafts, shared links and the quote', () => {
+  const draft = normalizeConfiguration({ extras: ['roof', 'night', 'recorder'] });
+  assert.deepEqual(draft.extras, ['night', 'recorder']);
+  const restored = configurationFromSearch('?extra=roof&extra=night&extra=recorder');
+  assert.deepEqual(restored.extras, draft.extras);
+  assert.equal(configurationToSearch({ ...DEFAULT_CONFIGURATION, extras: ['roof'] }).includes('roof'), false);
+  assert.equal(getQuote(draft).total, 1_927_000);
+  assert.equal(getQuote({ ...DEFAULT_CONFIGURATION, extras: ['roof'] }).optionsPrice, 0);
 });

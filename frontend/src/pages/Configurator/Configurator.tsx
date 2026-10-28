@@ -95,7 +95,7 @@ function ConfiguratorPage({ search }: { search: string }) {
     const blob = new Blob([JSON.stringify({ model: MODEL_NAME, configuration, specification: selected, estimate: quote }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = 'nakatay-horizon-configuration.json'; anchor.click();
+    anchor.href = url; anchor.download = 'nakatay-bmw-e46-configuration.json'; anchor.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function tabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -110,7 +110,7 @@ function ConfiguratorPage({ search }: { search: string }) {
   }
   function extraChoices(section: 'exterior' | 'options') {
     return EXTRAS.filter(item => item.section === section).map(item => {
-      const disabled = item.id === 'spoiler' && configuration.package !== 'sport';
+      const disabled = !item.available || (item.id === 'spoiler' && configuration.package !== 'sport');
       return <label key={item.id} className={`configurator-extra ${configuration.extras.includes(item.id) ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}`}>
         <input type="checkbox" checked={configuration.extras.includes(item.id)} disabled={disabled} onChange={() => toggleExtra(item.id)} />
         <span className="configurator-choice-copy"><strong>{item.name}</strong>

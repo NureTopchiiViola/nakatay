@@ -1,6 +1,7 @@
 import { RangeFilter } from './RangeFilter';
 import {
   FILTER_GROUPS,
+  BRAND_MODELS_MAP,
   PRICE_MAX,
   PRICE_MIN,
   YEAR_MAX,
@@ -43,26 +44,39 @@ export function CatalogFiltersPanel({
           Скинути фільтри
         </button>
       </div>
-      {FILTER_GROUPS.map((group) => (
-        <details className="catalog-filter-group" key={group.key} open>
-          <summary>{group.title}</summary>
-          <div className="catalog-filter-options">
-            {(group.options as readonly CatalogFilterOption[]).map(([value, label]) => {
-              const checked = filters[group.key].includes(value);
-              return (
-                <label className={`catalog-filter-chip ${checked ? 'selected' : ''}`} key={value}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => onToggleFilter(group.key, value)}
-                  />
-                  <span>{label}</span>
-                </label>
-              );
-            })}
-          </div>
-        </details>
-      ))}
+      
+      {FILTER_GROUPS.map((group) => {
+        let optionsToRender = group.options as readonly CatalogFilterOption[];
+
+        if (group.key === 'models') {
+          if (filters.brands.length === 0) return null;
+
+          optionsToRender = filters.brands.flatMap(brand => BRAND_MODELS_MAP[brand] || []);
+          if (optionsToRender.length === 0) return null;
+        }
+
+        return (
+          <details className="catalog-filter-group" key={group.key} open>
+            <summary>{group.title}</summary>
+            <div className="catalog-filter-options">
+              {optionsToRender.map(([value, label]) => {
+                const checked = filters[group.key].includes(value);
+                return (
+                  <label className={`catalog-filter-chip ${checked ? 'selected' : ''}`} key={value}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => onToggleFilter(group.key, value)}
+                    />
+                    <span>{label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })}
+
       <RangeFilter
         id="catalog-price"
         label="Ціна"

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   MdOutlineShare, 
   MdOutlineFavoriteBorder, 
   MdAdd,
+  MdRemove,
   MdOutlineCalendarMonth,
   MdOutlineLocalGasStation,
   MdOutlineSettings,
@@ -16,20 +17,60 @@ import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
 
+const mockCar: CarDetailsData = {
+  id: 1,
+  brand: "BMW",
+  modelName: "M4",
+  trimName: "Competition",
+  year: 2024,
+  engine: "3.0L Twin-Turbo I6",
+  transmission: "AUTOMATIC",
+  bodyType: "COUPE",
+  price: 3500000.00,
+  galleryUrls: [
+    "https://placehold.co/800x450/212223/cec6bd?text=BMW+M4+Main",
+    "https://placehold.co/150x100/212223/cec6bd?text=Side",
+    "https://placehold.co/150x100/212223/cec6bd?text=Interior"
+  ]
+};
+
 export function CarDetails() {
   const { id } = useParams<{ id: string }>(); 
+  const navigate = useNavigate(); 
   
   const [car, setCar] = useState<CarDetailsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  
+  // сюди контекст треба
   const [isCompared, setIsCompared] = useState(false);
 
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+
+  const toggleAccordion = (section: string) => {
+    setOpenAccordion(openAccordion === section ? null : section);
+  };
+
+  const scrollToPurchase = () => {
+    document.querySelector('.summary-title')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
+    // for testing 
+    if (id === 'mock') {
+      setCar(mockCar);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchCarData = async () => {
       try {
         setIsLoading(true);
         const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
-          headers: { Accept: 'application/json' },
+          headers: { 
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -37,7 +78,8 @@ export function CarDetails() {
         const data: CarDetailsData = await response.json();
         setCar(data);
       } catch (error) {
-        console.error("Error fetching car data:", error);
+        console.error("Backend is offline or car not found:", error);
+        setCar(null);
       } finally {
         setIsLoading(false);
       }
@@ -74,7 +116,7 @@ export function CarDetails() {
               {car.galleryUrls && car.galleryUrls.length > 0 ? (
                 <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
               ) : (
-                <div style={{ height: '100%', background: '#2e2e2e' }} /> // Fallback if no images
+                <div style={{ height: '100%', background: '#2e2e2e' }} />
               )}
             </div>
             
@@ -124,32 +166,49 @@ export function CarDetails() {
             </div>
             <div className="spec-item">
               <MdOutlineDirectionsCar size={24} />
-              <span style={{ textTransform: 'capitalize' }}>{car.bodyType.toLowerCase()}</span>
+              <span style={{ textTransform: 'capitalize' }}>{car.bodyType?.toLowerCase() || 'N/A'}</span>
             </div>
           </div>
 
-          <div className="car-details-accordion">
-            <div className="accordion-item">
-              <h3>Колір кузова</h3>
+<div className="car-details-accordion">
+            <div className="car-color-row">
+              <span className="color-label">Колір кузова</span>
+              {/* сюди передаватиметься configurator option exteriorColor */}
+              <span className="color-value">"Чорна ніч"</span>
             </div>
-            <div className="accordion-item">
-              <h3>Колір салону</h3>
+
+            <div className="car-color-row">
+              <span className="color-label">Колір салону</span>
+              {/* сюди передаватиметься configurator option interiorColor */}
+              <span className="color-value">Штучна шкіра ARTICO "Чорний"</span>
             </div>
+
+            <hr className="details-divider" />
 
             <div className="configurator-action-wrapper">
               <Button
                 variant="outline"
                 className="full-width"
-                onClick={() => window.location.href = '#configurator'}
+                onClick={() => navigate(`/create?carId=${car.id}`)}
               >
-                Відкрити конфігуратор
+                Змінити комплектацію
               </Button>
             </div>
 
-            <button className="accordion-item accordion-trigger">
-              <h3>Гарантійні умови</h3>
-              <MdAdd size={24} />
-            </button>
+            <div className={`accordion-item ${openAccordion === 'warranty' ? 'open' : ''}`}>
+              <button className="accordion-trigger" onClick={() => toggleAccordion('warranty')}>
+                <h3>Гарантійні умови</h3>
+                {openAccordion === 'warranty' ? <MdRemove size={24} /> : <MdAdd size={24} />}
+              </button>
+              {openAccordion === 'warranty' && (
+                <div className="accordion-content">
+                  <p style={{ padding: '0 1rem 1rem', lineHeight: '1.5', color: '#a0a0a0' }}>
+                    Базова гарантія від виробника діє протягом 3 років або до досягнення 100 000 км пробігу (залежно від того, що настане раніше). 
+                    Також надається 3 роки гарантії на лакофарбове покриття та 12 років від наскрізної корозії кузова.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
@@ -157,14 +216,15 @@ export function CarDetails() {
           <h2 className="section-title">Розпочати покупку</h2>
 
           <div className="purchase-options-grid">
-            <div className="purchase-card active">
+            {/* Converted to semantic <button> elements that scroll the page down */}
+            <button className="purchase-card active" onClick={scrollToPurchase}>
               <h4>Подати заявку на придбання</h4>
               <p>{formattedPrice} ₴</p>
-            </div>
-            <div className="purchase-card">
+            </button>
+            <button className="purchase-card" onClick={scrollToPurchase}>
               <h4>Забронювати авто</h4>
               <p className="purchase-card-subtext">Ми зв'яжемось з вами для підтвердження деталізації та зафіксуємо авто за вами.</p>
-            </div>
+            </button>
           </div>
 
           <div className="purchase-legal-grid">

@@ -1,3 +1,15 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  background-color: var(--color-background);
+  flex: 1 0 auto;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -51,6 +63,12 @@
 .site-footer nav a:hover,
 .footer-bottom a:hover {
   color: #655f58;
+}
+
+.main-nav a.active {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
 }
 
 .site-footer {
@@ -171,24 +189,6 @@
   flex-wrap: nowrap;
 }
 
-.header-actions .header-search.input-wrapper {
-  width: 180px;
-  flex-shrink: 0;
-  border: 1px solid var(--color-background) !important; 
-  background: transparent !important;
-}
-
-.header-actions .header-search .input-field,
-.header-actions .header-search .input-icon,
-.header-actions .header-search .input-icon svg {
-  color: var(--color-background) !important;
-}
-
-.header-actions .header-search .input-field::placeholder {
-  color: var(--color-background) !important;
-  opacity: 0.7 !important;
-}
-
 .header-actions .btn {
   color: var(--color-background) !important; 
   background: transparent !important;
@@ -203,8 +203,5 @@
   .header-actions {
     margin-left: auto; 
     order: 1; 
-  }
-  .header-actions .header-search.input-wrapper {
-    display: none !important; 
   }
 }

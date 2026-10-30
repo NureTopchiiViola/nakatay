@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { MdClose, MdAdd } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
-import type { ComparisonCar, SpecDefinition } from '../../types/CarComparison';
+import type { SpecDefinition } from '../../types/CarComparison';
+import { useCarComparison } from '../../context/CarComparisonContext';
 import './CarComparison.css';
 
 const SPEC_DEFINITIONS: SpecDefinition[] = [
@@ -11,64 +13,20 @@ const SPEC_DEFINITIONS: SpecDefinition[] = [
   { key: 'bodyType', label: 'Тип кузова' },
 ];
 
-const DEFAULT_CARS: ComparisonCar[] = [
-  {
-    id: '1',
-    brand: 'BMW',
-    modelName: 'iX3 M60',
-    price: 300000,
-    imageUrl: 'https://placehold.co/300x200/2e2e2e/cec6bd?text=BMW+iX3',
-    specs: {
-      year: 2026,
-      fuel: 'Електрика',
-      transmission: 'Автомат',
-      bodyType: 'Хетчбек'
-    }
-  },
-  {
-    id: '2',
-    brand: 'Toyota',
-    modelName: 'Camry',
-    price: 300000,
-    imageUrl: 'https://placehold.co/300x200/2e2e2e/cec6bd?text=Toyota+Camry',
-    specs: {
-      year: 2024,
-      fuel: 'Гібрид',
-      transmission: 'Автомат',
-      bodyType: 'Седан'
-    }
-  },
-  {
-    id: '3',
-    brand: 'Subaru',
-    modelName: 'Outback',
-    price: 300000,
-    imageUrl: 'https://placehold.co/300x200/2e2e2e/cec6bd?text=Subaru+Outback',
-    specs: {
-      year: 2010,
-      fuel: 'Бензин',
-      transmission: 'Автомат',
-      bodyType: 'Седан'
-    }
-  }
-];
-
 interface CarComparisonProps {
-  initialCars?: ComparisonCar[];
   onNavigateToCatalog?: () => void;
 }
 
-export function CarComparison({
-  initialCars = DEFAULT_CARS,
-  onNavigateToCatalog = () => (window.location.href = '#catalog')
-}: CarComparisonProps) {
-  const [cars, setCars] = useState<ComparisonCar[]>(initialCars);
+export function CarComparison({ onNavigateToCatalog }: CarComparisonProps) {
+  const navigate = useNavigate();
+  const { comparedCars: cars, removeFromComparison } = useCarComparison();
   const [showOnlyDifferences, setShowOnlyDifferences] = useState(false);
 
-  // Видалення авто з порівняння працює тільки якщо авто > 2
-  const handleRemoveCar = (id: string | number) => {
-    if (cars.length > 2) {
-      setCars((prev) => prev.filter((car) => car.id !== id));
+  const handleCatalogClick = () => {
+    if (onNavigateToCatalog) {
+      onNavigateToCatalog();
+    } else {
+      navigate('/');
     }
   };
 
@@ -89,6 +47,20 @@ export function CarComparison({
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('uk-UA').format(price) + ' ₴';
+
+  if (cars.length === 0) {
+    return (
+      <div className="comparison-page">
+        <div className="comparison-container" style={{ textAlign: 'center', padding: '40px' }}>
+          <h1 className="comparison-title">Порівняння авто</h1>
+          <p style={{ margin: '20px 0', color: '#888' }}>Список порівняння порожній.</p>
+          <Button variant="outline" onClick={handleCatalogClick}>
+            Перейти до каталогу
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="comparison-page">
@@ -121,7 +93,7 @@ export function CarComparison({
                   {canRemove && (
                     <button
                       className="remove-car-btn"
-                      onClick={() => handleRemoveCar(car.id)}
+                      onClick={() => removeFromComparison(car.id)}
                       aria-label="Видалити з порівняння"
                     >
                       <MdClose size={18} />
@@ -140,7 +112,7 @@ export function CarComparison({
               ))}
 
               {canAddMore && (
-                <div className="add-car-cell" onClick={onNavigateToCatalog}>
+                <div className="add-car-cell" onClick={handleCatalogClick}>
                   <div className="add-car-content">
                     <span>Додати авто</span>
                     <MdAdd size={20} />
@@ -172,7 +144,7 @@ export function CarComparison({
 
         {/* повернення в каталог */}
         <div className="comparison-footer-action">
-          <Button variant="outline" onClick={onNavigateToCatalog}>
+          <Button variant="outline" onClick={handleCatalogClick}>
             Назад до каталогу
           </Button>
         </div>

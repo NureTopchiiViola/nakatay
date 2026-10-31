@@ -16,6 +16,7 @@ import { API_BASE_URL } from '../../api';
 import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
+import { useCarComparison } from '../../context/CarComparisonContext';
 
 const mockCar: CarDetailsData = {
   id: 1,
@@ -42,8 +43,8 @@ export function CarDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
-  // сюди контекст треба
-  const [isCompared, setIsCompared] = useState(false);
+  const { toggleCompare, isInComparison } = useCarComparison();
+  const currentlyCompared = car ? isInComparison(car.id) : false;
 
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
@@ -140,10 +141,10 @@ export function CarDetails() {
               <Button variant="ghost" iconLeft={<MdOutlineShare />}>Поділитися</Button>
               <Button
                 variant="ghost"
-                onClick={() => setIsCompared(!isCompared)}
-                iconLeft={isCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />}
+                onClick={() => toggleCompare(car.id)}
+                iconLeft={currentlyCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />}
               >
-                {isCompared ? 'У порівнянні' : 'Порівняти'}
+                {currentlyCompared ? 'У порівнянні' : 'Порівняти'}
               </Button>
             </div>
             <button className="favorite-btn" aria-label="Додати в обране">
@@ -216,7 +217,6 @@ export function CarDetails() {
           <h2 className="section-title">Розпочати покупку</h2>
 
           <div className="purchase-options-grid">
-            {/* Converted to semantic <button> elements that scroll the page down */}
             <button className="purchase-card active" onClick={scrollToPurchase}>
               <h4>Подати заявку на придбання</h4>
               <p>{formattedPrice} ₴</p>

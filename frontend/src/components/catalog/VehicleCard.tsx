@@ -7,6 +7,7 @@ import autoTransmissionIcon from '../../assets/auto_transmission.svg';
 import { Button } from '../ui/Button';
 import { Tag } from '../ui/Tag';
 import './VehicleCard.css';
+import { useCarComparison } from '../../context/CarComparisonContext';
 
 export interface VehicleCardProps {
   id: number;
@@ -27,7 +28,9 @@ export function VehicleCard({
   transmission,
   price
 }: VehicleCardProps) {
-  const [isCompared, setIsCompared] = useState(false);
+  
+  const { toggleCompare, isInComparison } = useCarComparison();
+  const currentlyCompared = isInComparison(id);
   const [failedImageSrc, setFailedImageSrc] = useState('');
   const imageFailed = imageSrc === failedImageSrc;
 
@@ -54,9 +57,9 @@ export function VehicleCard({
           
           <Button 
             variant="ghost" 
-            onClick={() => setIsCompared(!isCompared)}
-            aria-label={isCompared ? "Видалити з порівняння" : "Додати до порівняння"}
-            iconLeft={isCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />} 
+            onClick={() => toggleCompare(id)}
+            aria-label={currentlyCompared ? "Видалити з порівняння" : "Додати до порівняння"}
+            iconLeft={currentlyCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />} 
           />
         </header>
 

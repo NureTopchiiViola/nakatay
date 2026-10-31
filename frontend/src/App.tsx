@@ -7,12 +7,14 @@ import { CarComparison } from './pages/CarComparison/CarComparison';
 import { CarDetails } from './pages/CarDetails/CarDetails';
 import { Configurator } from './pages/Configurator/Configurator';
 import { NotFound } from './pages/NotFound/NotFound';
+import { CarComparisonProvider } from './context/CarComparisonContext';
 
 export default function App() {
   return (
-    <Router>
-      <div className="app-layout">
-        <Header />
+    <CarComparisonProvider>
+      <Router>
+        <div className="app-layout">
+          <Header />
         
         <main className="main-content">
           <Routes>
@@ -31,5 +33,6 @@ export default function App() {
         <Footer />
       </div>
     </Router>
+    </CarComparisonProvider>
   );
 }

@@ -67,6 +67,9 @@
 .configurator-model-selector button { border: 1px solid var(--cfg-border); background: transparent; color: var(--cfg-muted); font-size: 11px; padding: 7px 10px; }
 .configurator-model-selector button[aria-pressed='true'] { background: var(--cfg-accent); color: #212121; }
 .configurator-asset-note { color: var(--cfg-muted); font-size: 11px; line-height: 1.6; margin: 10px 0 0; }
+.configurator-model-credit { color: var(--cfg-muted); font-size: 11px; line-height: 1.7; margin: 12px 0 0; }
+.configurator-model-credit a { text-underline-offset: 3px; }
+.configurator-model-credit a:hover { color: var(--cfg-ink); }
 .configurator-viewer-hint { position: absolute; bottom: 65px; width: 100%; text-align: center; font-size: 10px; color: var(--cfg-muted); padding: 0 16px; pointer-events: none; }
 .configurator-viewer-loading, .configurator-viewer-error { position: absolute; inset: 90px 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .configurator-viewer-error { background: var(--cfg-surface); }

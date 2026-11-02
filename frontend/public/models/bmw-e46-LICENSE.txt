@@ -1,0 +1,23 @@
+Model: 1999 BMW E46 328i Sport
+Author: Ddiaz Design
+Author profile: https://sketchfab.com/ddiaz-design
+Source: https://sketchfab.com/3d-models/1999-bmw-e46-328i-sport-5fce3b693344450380b0112a4d21cfe5
+
+License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+SPDX identifier: CC-BY-NC-SA-4.0
+License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+Legal code: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+Attribution and license are recorded in the source GLB's asset.extras metadata.
+The distributed GLB is an unmodified copy of the supplied source file.
+The viewer changes scale, orientation, camera position and body paint colour at runtime.
+Runtime adaptations also include procedural replacement rims, a reconstructed cabin
+(dashboard, instruments, steering wheel, console, seats and door panels), upholstery
+materials, decorative trim shaders, interior lighting and an LED headlight appearance.
+Further runtime adaptations include a mounted replacement rear-view mirror,
+front/rear dash-camera mockups and a demonstration Night Vision sensor and display.
+Adaptations of this model are provided under CC BY-NC-SA 4.0.
+This license notice applies to this model, not to the application's source code.
+
+Noncommercial use only. Give appropriate credit, link the license and indicate changes.
+When distributing adaptations, use the same license and retain attribution.

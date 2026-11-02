@@ -47,6 +47,48 @@ public class OptionService {
         return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
     }
 
+//    public PriceResponse calculatePrice(PriceRequest request) {
+//        return new PriceCalculator(carTrimRepository, optionRepository, request).compute();
+//    }
+//
+//    public class PriceCalculator {
+//        private final CarTrimRepository carTrimRepository;
+//        private final OptionRepository optionRepository;
+//        private final PriceRequest request;
+//
+//        private BigDecimal basePrice;
+//        private BigDecimal optionsCost;
+//        private BigDecimal discount = BigDecimal.ZERO;
+//
+//        public PriceCalculator(CarTrimRepository carTrimRepository, OptionRepository optionRepository, PriceRequest request) {
+//            this.carTrimRepository = carTrimRepository;
+//            this.optionRepository = optionRepository;
+//            this.request = request;
+//        }
+//
+//        public PriceResponse compute() {
+//            calculateBasePrice();
+//            calculateOptionsCost();
+//
+//            BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
+//            return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
+//        }
+//
+//        private void calculateBasePrice() {
+//            CarTrim trim = carTrimRepository.findById(request.carTrimId()).orElseThrow();
+//            basePrice = trim.getCarModel().getBasePrice().add(trim.getPriceModifier());
+//        }
+//
+//        private void calculateOptionsCost() {
+//            List<Option> options = request.selectedOptionIds() != null
+//                    ? optionRepository.findAllById(request.selectedOptionIds())
+//                    : Collections.emptyList();
+//            optionsCost = options.stream()
+//                    .map(Option::getPriceModifier)
+//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        }
+//    }
+
     public ConfigResponse saveConfiguration(ConfigRequest request) {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));

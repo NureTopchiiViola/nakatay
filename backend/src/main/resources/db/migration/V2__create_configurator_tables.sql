@@ -1,6 +1,6 @@
 CREATE TABLE configuration_option (
                                       id BIGSERIAL PRIMARY KEY,
-                                      car_trim_id BIGINT NOT NULL REFERENCES car_trim(id) ON DELETE CASCADE,
+                                      car_trim_id BIGINT NOT NULL REFERENCES car_trim(trim_id) ON DELETE CASCADE,
                                       category VARCHAR(50) NOT NULL,
                                       sub_category VARCHAR(100),
                                       name VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE configuration_option (
 CREATE TABLE saved_configuration (
                                      id BIGSERIAL PRIMARY KEY,
                                      user_id BIGINT,
-                                     car_trim_id BIGINT NOT NULL REFERENCES car_trim(id) ON DELETE CASCADE,
+                                     car_trim_id BIGINT NOT NULL REFERENCES car_trim(trim_id) ON DELETE CASCADE,
                                      share_code VARCHAR(32) NOT NULL UNIQUE,
                                      total_price DECIMAL(12, 2) NOT NULL,
                                      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

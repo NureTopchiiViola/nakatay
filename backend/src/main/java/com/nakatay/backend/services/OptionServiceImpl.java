@@ -1,4 +1,179 @@
 package com.nakatay.backend.services;
 
-public class OptionServiceImpl {
+import com.nakatay.backend.dto.request.ConfigRequest;
+import com.nakatay.backend.dto.request.PriceRequest;
+import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.OptionDto;
+import com.nakatay.backend.dto.response.PriceResponse;
+import com.nakatay.backend.models.CarTrim;
+import com.nakatay.backend.repositories.CarTrimRepository;
+import com.nakatay.backend.repositories.ConfigRepository;
+import com.nakatay.backend.models.Option;
+import com.nakatay.backend.models.SavedConfig;
+import com.nakatay.backend.repositories.OptionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class OptionServiceImpl implements OptionService {
+    private final OptionRepository optionRepository;
+    private final ConfigRepository savedConfigRepository;
+    private final CarTrimRepository carTrimRepository;
+
+    @Override
+    public List<OptionDto> getOptionsForTrim(Long trimId) {
+        return optionRepository.findByCarTrimIdAndIsAvailableTrue(trimId).stream()
+                .map(this::mapToOptionDto)
+                .toList();
+    }
+
+    @Override
+    public PriceResponse calculatePrice(PriceRequest request) {
+        CarTrim trim = carTrimRepository.findById(request.carTrimId())
+                .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
+
+        BigDecimal basePrice = trim.getCarModel().getBasePrice()
+                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+
+        List<Option> options = request.selectedOptionIds() != null && !request.selectedOptionIds().isEmpty()
+                ? optionRepository.findAllById(request.selectedOptionIds())
+                : Collections.emptyList();
+
+        BigDecimal optionsCost = options.stream()
+                .map(Option::getPriceModifier)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal discount = BigDecimal.ZERO;
+        BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
+
+        return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
+    }
+
+//    public PriceResponse calculatePrice(PriceRequest request) {
+//        return new PriceCalculator(carTrimRepository, optionRepository, request).compute();
+//    }
+//
+//    public class PriceCalculator {
+//        private final CarTrimRepository carTrimRepository;
+//        private final OptionRepository optionRepository;
+//        private final PriceRequest request;
+//
+//        private BigDecimal basePrice;
+//        private BigDecimal optionsCost;
+//        private BigDecimal discount = BigDecimal.ZERO;
+//
+//        public PriceCalculator(CarTrimRepository carTrimRepository, OptionRepository optionRepository, PriceRequest request) {
+//            this.carTrimRepository = carTrimRepository;
+//            this.optionRepository = optionRepository;
+//            this.request = request;
+//        }
+//
+//        public PriceResponse compute() {
+//            calculateBasePrice();
+//            calculateOptionsCost();
+//
+//            BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
+//            return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
+//        }
+//
+//        private void calculateBasePrice() {
+//            CarTrim trim = carTrimRepository.findById(request.carTrimId()).orElseThrow();
+//            basePrice = trim.getCarModel().getBasePrice().add(trim.getPriceModifier());
+//        }
+//
+//        private void calculateOptionsCost() {
+//            List<Option> options = request.selectedOptionIds() != null
+//                    ? optionRepository.findAllById(request.selectedOptionIds())
+//                    : Collections.emptyList();
+//            optionsCost = options.stream()
+//                    .map(Option::getPriceModifier)
+//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        }
+//    }
+
+    @Override
+    public ConfigResponse saveConfiguration(ConfigRequest request) {
+        CarTrim trim = carTrimRepository.findById(request.carTrimId())
+                .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
+
+        List<Option> options = request.selectedOptionIds() != null && !request.selectedOptionIds().isEmpty()
+                ? optionRepository.findAllById(request.selectedOptionIds())
+                : Collections.emptyList();
+
+        BigDecimal basePrice = trim.getCarModel().getBasePrice()
+                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+        BigDecimal optionsCost = options.stream()
+                .map(Option::getPriceModifier)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPrice = basePrice.add(optionsCost);
+        String shareCode = generateUniqueShareCode();
+
+        SavedConfig savedConfig = SavedConfig.builder()
+                .userId(request.userId())
+                .carTrim(trim)
+                .shareCode(shareCode)
+                .totalPrice(totalPrice)
+                .selectedOptions(new HashSet<>(options))
+                .build();
+
+        SavedConfig saved = savedConfigRepository.save(savedConfig);
+        return mapToSavedConfigResponse(saved, basePrice);
+    }
+
+    @Override
+    public ConfigResponse getByShareCode(String shareCode) {
+        SavedConfig config = savedConfigRepository.findByShareCode(shareCode)
+                .orElseThrow(() -> new IllegalArgumentException("Конфігурацію за кодом не знайдено: " + shareCode));
+
+        CarTrim trim = config.getCarTrim();
+        BigDecimal basePrice = trim.getCarModel().getBasePrice()
+                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+
+        return mapToSavedConfigResponse(config, basePrice);
+    }
+
+    private String generateUniqueShareCode() {
+        return UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+    }
+
+    private OptionDto mapToOptionDto(Option opt) {
+        return new OptionDto(
+                opt.getId(),
+                opt.getCategory(),
+                opt.getSubCategory(),
+                opt.getName(),
+                opt.getPriceModifier(),
+                opt.getAssetUrl(),
+                opt.isAvailable()
+        );
+    }
+
+    private ConfigResponse mapToSavedConfigResponse(SavedConfig config, BigDecimal basePrice) {
+        String title = config.getCarTrim().getCarModel().getBrand() + " " +
+                config.getCarTrim().getCarModel().getModelName() + " " +
+                config.getCarTrim().getTrimName();
+
+        List<OptionDto> optionDtos = config.getSelectedOptions().stream()
+                .map(this::mapToOptionDto)
+                .toList();
+
+        return new ConfigResponse(
+                config.getId(),
+                config.getShareCode(),
+                config.getCarTrim().getId(),
+                title,
+                basePrice,
+                config.getTotalPrice(),
+                optionDtos,
+                config.getCreatedAt()
+        );
+    }
 }

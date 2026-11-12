@@ -1,4 +1,4 @@
-package com.nakatay.backend.car.dto;
+package com.nakatay.backend.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;

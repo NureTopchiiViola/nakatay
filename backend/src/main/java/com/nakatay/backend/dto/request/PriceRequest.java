@@ -1,4 +1,4 @@
-package com.nakatay.backend.option.dto;
+package com.nakatay.backend.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;

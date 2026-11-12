@@ -1,4 +1,4 @@
-package com.nakatay.backend.car;
+package com.nakatay.backend.models;
 
 import jakarta.persistence.*;
 import lombok.Getter;

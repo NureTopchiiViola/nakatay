@@ -1,6 +1,5 @@
-package com.nakatay.backend.option;
+package com.nakatay.backend.models;
 
-import com.nakatay.backend.car.CarTrim;
 import jakarta.persistence.*;
 import lombok.*;
 

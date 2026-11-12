@@ -1,6 +1,10 @@
-package com.nakatay.backend.option;
+package com.nakatay.backend.controllers;
 
-import com.nakatay.backend.option.dto.*;
+import com.nakatay.backend.dto.request.ConfigRequest;
+import com.nakatay.backend.dto.request.PriceRequest;
+import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.OptionDto;
+import com.nakatay.backend.dto.response.PriceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

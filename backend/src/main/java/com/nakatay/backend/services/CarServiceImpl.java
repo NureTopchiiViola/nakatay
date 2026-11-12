@@ -1,9 +1,12 @@
-package com.nakatay.backend.car;
+package com.nakatay.backend.services;
 
-import com.nakatay.backend.car.dto.CarFilterParams;
-import com.nakatay.backend.car.dto.CarListItemResponse;
-import com.nakatay.backend.car.dto.CarTrimDto;
+import com.nakatay.backend.models.CarTrim;
+import com.nakatay.backend.repositories.CarTrimRepository;
+import com.nakatay.backend.dto.request.CarFilterParams;
+import com.nakatay.backend.dto.response.CarListItemResponse;
+import com.nakatay.backend.dto.response.CarTrimDto;
 import com.nakatay.backend.common.exception.ResourceNotFoundException;
+import com.nakatay.backend.utils.CarSearchSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

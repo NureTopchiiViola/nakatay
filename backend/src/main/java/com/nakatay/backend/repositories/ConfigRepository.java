@@ -1,5 +1,6 @@
-package com.nakatay.backend.option;
+package com.nakatay.backend.repositories;
 
+import com.nakatay.backend.models.SavedConfig;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

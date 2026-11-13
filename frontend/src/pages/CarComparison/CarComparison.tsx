@@ -141,14 +141,26 @@ export function CarComparison({ onNavigateToCatalog }: CarComparisonProps) {
                         <MdClose size={18} />
                       </button>
                     )}
-                    <div className="car-image-container">
+                    
+                    <div 
+                      className="car-image-container" 
+                      onClick={() => navigate(`/cars/${car.id}`)}
+                      style={{ cursor: 'pointer' }}
+                      title={`Перейти до ${car.brand} ${car.modelName}`}
+                    >
                       {car.galleryUrls && car.galleryUrls.length > 0 ? (
                         <img src={car.galleryUrls[0]} alt={`${car.brand} ${car.modelName}`} />
                       ) : (
                         <div className="image-placeholder" />
                       )}
                     </div>
-                    <h3 className="car-card-name">{car.brand} {car.modelName}</h3>
+                    <h3 
+                      className="car-card-name" 
+                      onClick={() => navigate(`/cars/${car.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {car.brand} {car.modelName}
+                    </h3>
                     <p className="car-card-price">{formatPrice(car.price)}</p>
                   </div>
                 ))}
@@ -180,6 +192,30 @@ export function CarComparison({ onNavigateToCatalog }: CarComparisonProps) {
                   {canAddMore && <div className="spec-value-cell empty-cell" />}
                 </div>
               ))}
+
+            {/* Кнопки дій */}
+              <div className="grid-row action-row">
+                <div className="spec-label-cell"></div>
+                {cars.map((car) => (
+                  <div key={`actions-${car.id}`} className="spec-value-cell action-buttons-cell" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px' }}>
+                    <Button 
+                      variant="solid" 
+                      onClick={() => navigate(`/create?carId=${car.id}`)}
+                      style={{ width: '100%' }}
+                    >
+                      Конфігурувати
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate(`/order/${car.id}`)}
+                      style={{ width: '100%' }}
+                    >
+                      Оформити заявку
+                    </Button>
+                  </div>
+                ))}
+                {canAddMore && <div className="spec-value-cell empty-cell" />}
+              </div>
 
             </div>
           </div>

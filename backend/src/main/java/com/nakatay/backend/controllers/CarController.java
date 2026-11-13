@@ -1,8 +1,9 @@
-package com.nakatay.backend.car;
+package com.nakatay.backend.controllers;
 
-import com.nakatay.backend.car.dto.CarFilterParams;
-import com.nakatay.backend.car.dto.CarListItemResponse;
-import com.nakatay.backend.car.dto.CarTrimDto;
+import com.nakatay.backend.dto.request.CarFilterParams;
+import com.nakatay.backend.dto.response.CarListItemResponse;
+import com.nakatay.backend.dto.response.CarTrimDto;
+import com.nakatay.backend.services.CarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

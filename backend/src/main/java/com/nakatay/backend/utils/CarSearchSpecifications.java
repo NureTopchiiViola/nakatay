@@ -1,7 +1,7 @@
-package com.nakatay.backend.car;
+package com.nakatay.backend.utils;
 
-import com.nakatay.backend.car.CarTrim;
-import com.nakatay.backend.car.dto.CarFilterParams;
+import com.nakatay.backend.models.CarTrim;
+import com.nakatay.backend.dto.request.CarFilterParams;
 import jakarta.persistence.criteria.Expression;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.JoinType;

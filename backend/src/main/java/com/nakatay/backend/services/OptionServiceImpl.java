@@ -1,8 +1,16 @@
-package com.nakatay.backend.option;
+package com.nakatay.backend.services;
 
-import com.nakatay.backend.car.CarTrim;
-import com.nakatay.backend.car.CarTrimRepository;
-import com.nakatay.backend.option.dto.*;
+import com.nakatay.backend.dto.request.ConfigRequest;
+import com.nakatay.backend.dto.request.PriceRequest;
+import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.OptionDto;
+import com.nakatay.backend.dto.response.PriceResponse;
+import com.nakatay.backend.models.CarTrim;
+import com.nakatay.backend.repositories.CarTrimRepository;
+import com.nakatay.backend.repositories.ConfigRepository;
+import com.nakatay.backend.models.Option;
+import com.nakatay.backend.models.SavedConfig;
+import com.nakatay.backend.repositories.OptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,18 +22,19 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class OptionService {
+public class OptionServiceImpl implements OptionService {
     private final OptionRepository optionRepository;
     private final ConfigRepository savedConfigRepository;
     private final CarTrimRepository carTrimRepository;
 
-
+    @Override
     public List<OptionDto> getOptionsForTrim(Long trimId) {
         return optionRepository.findByCarTrimIdAndIsAvailableTrue(trimId).stream()
                 .map(this::mapToOptionDto)
                 .toList();
     }
 
+    @Override
     public PriceResponse calculatePrice(PriceRequest request) {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
@@ -47,6 +56,49 @@ public class OptionService {
         return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
     }
 
+//    public PriceResponse calculatePrice(PriceRequest request) {
+//        return new PriceCalculator(carTrimRepository, optionRepository, request).compute();
+//    }
+//
+//    public class PriceCalculator {
+//        private final CarTrimRepository carTrimRepository;
+//        private final OptionRepository optionRepository;
+//        private final PriceRequest request;
+//
+//        private BigDecimal basePrice;
+//        private BigDecimal optionsCost;
+//        private BigDecimal discount = BigDecimal.ZERO;
+//
+//        public PriceCalculator(CarTrimRepository carTrimRepository, OptionRepository optionRepository, PriceRequest request) {
+//            this.carTrimRepository = carTrimRepository;
+//            this.optionRepository = optionRepository;
+//            this.request = request;
+//        }
+//
+//        public PriceResponse compute() {
+//            calculateBasePrice();
+//            calculateOptionsCost();
+//
+//            BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
+//            return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
+//        }
+//
+//        private void calculateBasePrice() {
+//            CarTrim trim = carTrimRepository.findById(request.carTrimId()).orElseThrow();
+//            basePrice = trim.getCarModel().getBasePrice().add(trim.getPriceModifier());
+//        }
+//
+//        private void calculateOptionsCost() {
+//            List<Option> options = request.selectedOptionIds() != null
+//                    ? optionRepository.findAllById(request.selectedOptionIds())
+//                    : Collections.emptyList();
+//            optionsCost = options.stream()
+//                    .map(Option::getPriceModifier)
+//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+//        }
+//    }
+
+    @Override
     public ConfigResponse saveConfiguration(ConfigRequest request) {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
@@ -76,6 +128,7 @@ public class OptionService {
         return mapToSavedConfigResponse(saved, basePrice);
     }
 
+    @Override
     public ConfigResponse getByShareCode(String shareCode) {
         SavedConfig config = savedConfigRepository.findByShareCode(shareCode)
                 .orElseThrow(() -> new IllegalArgumentException("Конфігурацію за кодом не знайдено: " + shareCode));

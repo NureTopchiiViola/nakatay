@@ -8,6 +8,7 @@ import { CarDetails } from './pages/CarDetails/CarDetails';
 import { Configurator } from './pages/Configurator/Configurator';
 import { NotFound } from './pages/NotFound/NotFound';
 import { CarComparisonProvider } from './context/CarComparisonContext';
+import { Checkout } from './pages/Checkout/Checkout';
 
 export default function App() {
   return (
@@ -26,6 +27,8 @@ export default function App() {
             {/*  порівняння */}
             <Route path="/compare" element={<CarComparison />} />
             <Route path="/create" element={<Configurator />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order/:id" element={<Checkout />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

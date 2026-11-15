@@ -1,6 +1,6 @@
-import React from 'react';
 import { MdClose } from 'react-icons/md';
 import { GoogleLogin } from '@react-oauth/google';
+import { getUserProfile } from '../../auth/userProfile';
 import './AuthModal.css';
 
 interface AuthModalProps {
@@ -11,8 +11,9 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
-const handleGoogleSuccess = async (credentialResponse: any) => {
+const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
   const googleToken = credentialResponse.credential;
+  if (!googleToken) return;
   
   try {
     const response = await fetch('http://localhost:8081/api/auth/google', {
@@ -27,6 +28,7 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
       const data = await response.json();
       
       window.localStorage.setItem('accessToken', data.accessToken);
+      window.localStorage.setItem('userProfile', JSON.stringify(getUserProfile(googleToken)));
       
       console.log('auth success');
       onClose();

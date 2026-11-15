@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
 import { CarViewer } from './CarViewer';
 import {
@@ -38,6 +38,7 @@ export function Configurator() {
 
 function ConfiguratorPage({ search }: { search: string }) {
   const [configuration, setConfiguration] = useState<Configuration>(() => configurationFromSearch(search));
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('exterior');
   const [promo, setPromo] = useState('');
   const [promoError, setPromoError] = useState('');
@@ -207,7 +208,12 @@ function ConfiguratorPage({ search }: { search: string }) {
           <div className="configurator-checkout-actions">
             <button type="button" onClick={saveDraft} title="Зберегти чернетку в цьому браузері"><MdOutlineBookmarkBorder /> Зберегти</button>
             <button type="button" onClick={openShare}><MdOutlineShare /> Поділитися</button>
-            <button type="button" className="configurator-primary" onClick={() => setModal('application')}>Заявка <MdChevronRight /></button>
+            <button type="button" className="configurator-primary" onClick={() => {
+              const params = new URLSearchParams(configurationToSearch(configuration));
+              const carId = new URLSearchParams(search).get('carId');
+              if (carId) params.set('carId', carId);
+              navigate(`/checkout?${params.toString()}`);
+            }}>Подати заявку <MdChevronRight /></button>
           </div>
         </div>
       </section>

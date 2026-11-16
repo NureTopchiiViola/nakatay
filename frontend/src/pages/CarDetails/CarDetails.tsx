@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   MdOutlineShare, 
   MdOutlineFavoriteBorder, 
+  MdFavorite,
   MdAdd,
   MdRemove,
   MdOutlineCalendarMonth,
@@ -12,11 +13,13 @@ import {
   MdOutlineBalance
 } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg';
-import { API_BASE_URL } from '../../api';
+import { API_BASE_URL, getCarImageUrls } from '../../api';
 import { Button } from '../../components/ui/Button';
 import type { CarDetailsData } from '../../types/Car';
 import './CarDetails.css';
-import { useCarComparison } from '../../context/CarComparisonContext';
+import { useCarComparison } from '../../context/useCarComparison';
+import { useFavorites } from '../../context/useFavorites';
+import { useAuthModal } from '../../context/useAuthModal';
 
 const mockCar: CarDetailsData = {
   id: 1,
@@ -39,12 +42,18 @@ export function CarDetails() {
   const { id } = useParams<{ id: string }>(); 
   const navigate = useNavigate(); 
   
-  const [car, setCar] = useState<CarDetailsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [carState, setCarState] = useState<{ id: string; car: CarDetailsData | null } | null>(null);
+  const isMockCar = id === 'mock';
+  const car = isMockCar ? mockCar : carState && carState.id === id ? carState.car : null;
+  const isLoading = !isMockCar && Boolean(id) && carState?.id !== id;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
   const { toggleCompare, isInComparison } = useCarComparison();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { openAuthModal } = useAuthModal();
+  const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
   const currentlyCompared = car ? isInComparison(car.id) : false;
+  const currentlyFavorite = isAuthenticated && car ? isFavorite(car.id) : false;
 
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
@@ -57,36 +66,29 @@ export function CarDetails() {
   };
 
   useEffect(() => {
-    // for testing 
-    if (id === 'mock') {
-      setCar(mockCar);
-      setIsLoading(false);
-      return;
-    }
+    if (!id || id === 'mock') return;
+    let active = true;
 
     const fetchCarData = async () => {
       try {
-        setIsLoading(true);
         const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
-          headers: { 
-            'Accept': 'application/json',
-            'ngrok-skip-browser-warning': 'true'
-          },
+          headers: { 'Accept': 'application/json' },
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data: CarDetailsData = await response.json();
-        setCar(data);
+        if (active) setCarState({ id, car: { ...data, galleryUrls: getCarImageUrls(data.galleryUrls) } });
       } catch (error) {
-        console.error("Backend is offline or car not found:", error);
-        setCar(null);
-      } finally {
-        setIsLoading(false);
+        if (active) {
+          console.error("Backend is offline or car not found:", error);
+          setCarState({ id, car: null });
+        }
       }
     };
 
-    if (id) fetchCarData();
+    void fetchCarData();
+    return () => { active = false; };
   }, [id]);
 
   if (isLoading) {
@@ -115,7 +117,7 @@ export function CarDetails() {
             <div className="car-gallery-main">
               <div className="car-availability-badge">В наявності</div>
               {car.galleryUrls && car.galleryUrls.length > 0 ? (
-                <img src={car.galleryUrls[activeImageIndex]} alt={`${car.brand} ${car.modelName}`} />
+                <img src={car.galleryUrls[Math.min(activeImageIndex, car.galleryUrls.length - 1)]} alt={`${car.brand} ${car.modelName}`} />
               ) : (
                 <div style={{ height: '100%', background: '#2e2e2e' }} />
               )}
@@ -126,7 +128,7 @@ export function CarDetails() {
                 {car.galleryUrls.map((img, idx) => (
                   <button
                     key={idx}
-                    className={`thumbnail-btn ${idx === activeImageIndex ? 'active' : ''}`}
+                    className={`thumbnail-btn ${idx === Math.min(activeImageIndex, car.galleryUrls.length - 1) ? 'active' : ''}`}
                     onClick={() => setActiveImageIndex(idx)}
                   >
                     <img src={img} alt={`Thumbnail ${idx + 1}`} />
@@ -147,8 +149,29 @@ export function CarDetails() {
                 {currentlyCompared ? 'У порівнянні' : 'Порівняти'}
               </Button>
             </div>
-            <button className="favorite-btn" aria-label="Додати в обране">
-              <MdOutlineFavoriteBorder size={28} />
+            <button
+              type="button"
+              className="favorite-btn"
+              aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
+              aria-pressed={currentlyFavorite}
+              onClick={() => {
+                if (!car) return;
+                if (!isAuthenticated) {
+                  openAuthModal();
+                  return;
+                }
+                toggleFavorite({
+                  id: car.id,
+                  imageSrc: car.galleryUrls?.[0] ?? '',
+                  title: `${car.brand} ${car.modelName} ${car.trimName}`,
+                  year: car.year,
+                  engine: car.engine,
+                  transmission: car.transmission,
+                  price: `${new Intl.NumberFormat('uk-UA').format(car.price)} ₴`,
+                });
+              }}
+            >
+              {currentlyFavorite ? <MdFavorite size={28} /> : <MdOutlineFavoriteBorder size={28} />}
             </button>
           </div>
 

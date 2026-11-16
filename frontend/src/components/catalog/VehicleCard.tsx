@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdOutlineBalance, MdDirectionsCarFilled } from 'react-icons/md';
+import { MdOutlineBalance, MdDirectionsCarFilled, MdFavorite, MdOutlineFavoriteBorder } from 'react-icons/md';
 import balanceCheckIcon from '../../assets/BalanceCheck.svg';
 import localGasStationIcon from '../../assets/local_gas_station.svg';
 import autoTransmissionIcon from '../../assets/auto_transmission.svg';
 import { Button } from '../ui/Button';
 import { Tag } from '../ui/Tag';
 import './VehicleCard.css';
-import { useCarComparison } from '../../context/CarComparisonContext';
+import { useCarComparison } from '../../context/useCarComparison';
+import { useFavorites } from '../../context/useFavorites';
+import { useAuthModal } from '../../context/useAuthModal';
 
 export interface VehicleCardProps {
   id: number;
@@ -31,8 +33,13 @@ export function VehicleCard({
   
   const { toggleCompare, isInComparison } = useCarComparison();
   const currentlyCompared = isInComparison(id);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { openAuthModal } = useAuthModal();
+  const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
+  const currentlyFavorite = isAuthenticated && isFavorite(id);
   const [failedImageSrc, setFailedImageSrc] = useState('');
   const imageFailed = imageSrc === failedImageSrc;
+  const favoriteCar = { id, imageSrc, title, year, engine, transmission, price };
 
   return (
     <article className="vehicle-card">
@@ -55,12 +62,27 @@ export function VehicleCard({
             <span className="vehicle-card-year">{year}</span>
           </div>
           
-          <Button 
-            variant="ghost" 
-            onClick={() => toggleCompare(id)}
-            aria-label={currentlyCompared ? "Видалити з порівняння" : "Додати до порівняння"}
-            iconLeft={currentlyCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />} 
-          />
+          <div className="vehicle-card-header-actions">
+            <Button 
+              variant="ghost" 
+              onClick={() => toggleCompare(id)}
+              aria-label={currentlyCompared ? "Видалити з порівняння" : "Додати до порівняння"}
+              iconLeft={currentlyCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />} 
+            />
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  openAuthModal();
+                  return;
+                }
+                toggleFavorite(favoriteCar);
+              }}
+              aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
+              aria-pressed={currentlyFavorite}
+              iconLeft={currentlyFavorite ? <MdFavorite /> : <MdOutlineFavoriteBorder />}
+            />
+          </div>
         </header>
 
         <div className="vehicle-card-tags">

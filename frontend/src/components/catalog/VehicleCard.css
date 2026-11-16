@@ -51,6 +51,12 @@
   margin-bottom: 1rem;
 }
 
+.vehicle-card-header-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+
 .vehicle-card-title {
   color: var(--color-text-primary);
   font-family: var(--font-heading);

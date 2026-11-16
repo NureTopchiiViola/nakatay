@@ -1,12 +1,13 @@
-import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { MdOutlinePerson, MdOutlineFavoriteBorder, MdAdminPanelSettings } from 'react-icons/md';
+import { MdOutlinePerson, MdFavorite, MdOutlineFavoriteBorder, MdAdminPanelSettings } from 'react-icons/md';
 import { Button } from '../../components/ui/Button';
-import { AuthModal } from '../../components/auth/AuthModal';
+import { useFavorites } from '../../context/useFavorites';
+import { useAuthModal } from '../../context/useAuthModal';
 
 export function Header() {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
+  const { favorites } = useFavorites();
 
   const isAuthenticated = !!localStorage.getItem('accessToken');
   const userRole = localStorage.getItem('userRole');
@@ -16,7 +17,15 @@ export function Header() {
     if (isAuthenticated) {
       navigate('/profile');
     } else {
-      setIsAuthModalOpen(true);
+      openAuthModal();
+    }
+  };
+
+  const handleFavoritesClick = () => {
+    if (isAuthenticated) {
+      navigate('/favorites');
+    } else {
+      openAuthModal();
     }
   };
 
@@ -59,12 +68,9 @@ export function Header() {
           />
           <Button 
             variant="ghost" 
-            iconLeft={<MdOutlineFavoriteBorder size={22} />} 
-            aria-label="Обране" 
-          />
-          <AuthModal 
-            isOpen={isAuthModalOpen} 
-            onClose={() => setIsAuthModalOpen(false)} 
+            iconLeft={isAuthenticated && favorites.length > 0 ? <MdFavorite size={22} /> : <MdOutlineFavoriteBorder size={22} />} 
+            aria-label={isAuthenticated && favorites.length > 0 ? `Обране: ${favorites.length}` : 'Обране'} 
+            onClick={handleFavoritesClick}
           />
         </div>
       </header>

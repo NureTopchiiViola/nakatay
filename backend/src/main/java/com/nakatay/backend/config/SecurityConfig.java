@@ -39,11 +39,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         //public
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/options/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/options/calculate-price").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/configs/share/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/configurator/trims/*/options").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/configurator/calculate").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/configurator/share/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
+
+                        // admin
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // other if authenticated
                         .anyRequest().authenticated()

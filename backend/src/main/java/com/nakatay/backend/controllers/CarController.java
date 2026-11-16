@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Tag(name = "Каталог авто", description = "Ендпоінти для пошуку, фільтрації, сортування та перегляду конкретної комплектації")
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/cars")
 @RequiredArgsConstructor

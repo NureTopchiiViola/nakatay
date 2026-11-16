@@ -6,13 +6,15 @@ import com.nakatay.backend.dto.response.ConfigResponse;
 import com.nakatay.backend.dto.response.OptionDto;
 import com.nakatay.backend.dto.response.PriceResponse;
 import com.nakatay.backend.models.CarTrim;
-import com.nakatay.backend.repositories.CarTrimRepository;
-import com.nakatay.backend.repositories.ConfigRepository;
 import com.nakatay.backend.models.Option;
 import com.nakatay.backend.models.SavedConfig;
+import com.nakatay.backend.models.User;
+import com.nakatay.backend.repositories.CarTrimRepository;
+import com.nakatay.backend.repositories.ConfigRepository;
 import com.nakatay.backend.repositories.OptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -39,8 +41,7 @@ public class OptionServiceImpl implements OptionService {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
 
-        BigDecimal basePrice = trim.getCarModel().getBasePrice()
-                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+        BigDecimal basePrice = calculateTrimBasePrice(trim);
 
         List<Option> options = request.selectedOptionIds() != null && !request.selectedOptionIds().isEmpty()
                 ? optionRepository.findAllById(request.selectedOptionIds())
@@ -56,50 +57,9 @@ public class OptionServiceImpl implements OptionService {
         return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
     }
 
-//    public PriceResponse calculatePrice(PriceRequest request) {
-//        return new PriceCalculator(carTrimRepository, optionRepository, request).compute();
-//    }
-//
-//    public class PriceCalculator {
-//        private final CarTrimRepository carTrimRepository;
-//        private final OptionRepository optionRepository;
-//        private final PriceRequest request;
-//
-//        private BigDecimal basePrice;
-//        private BigDecimal optionsCost;
-//        private BigDecimal discount = BigDecimal.ZERO;
-//
-//        public PriceCalculator(CarTrimRepository carTrimRepository, OptionRepository optionRepository, PriceRequest request) {
-//            this.carTrimRepository = carTrimRepository;
-//            this.optionRepository = optionRepository;
-//            this.request = request;
-//        }
-//
-//        public PriceResponse compute() {
-//            calculateBasePrice();
-//            calculateOptionsCost();
-//
-//            BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
-//            return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
-//        }
-//
-//        private void calculateBasePrice() {
-//            CarTrim trim = carTrimRepository.findById(request.carTrimId()).orElseThrow();
-//            basePrice = trim.getCarModel().getBasePrice().add(trim.getPriceModifier());
-//        }
-//
-//        private void calculateOptionsCost() {
-//            List<Option> options = request.selectedOptionIds() != null
-//                    ? optionRepository.findAllById(request.selectedOptionIds())
-//                    : Collections.emptyList();
-//            optionsCost = options.stream()
-//                    .map(Option::getPriceModifier)
-//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-//        }
-//    }
-
     @Override
-    public ConfigResponse saveConfiguration(ConfigRequest request) {
+    @Transactional
+    public ConfigResponse saveConfiguration(ConfigRequest request, User currentUser) {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
 
@@ -107,21 +67,18 @@ public class OptionServiceImpl implements OptionService {
                 ? optionRepository.findAllById(request.selectedOptionIds())
                 : Collections.emptyList();
 
-        BigDecimal basePrice = trim.getCarModel().getBasePrice()
-                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+        BigDecimal basePrice = calculateTrimBasePrice(trim);
         BigDecimal optionsCost = options.stream()
                 .map(Option::getPriceModifier)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalPrice = basePrice.add(optionsCost);
-        String shareCode = generateUniqueShareCode();
-
         SavedConfig savedConfig = SavedConfig.builder()
-                .userId(request.userId())
+                .user(currentUser)
                 .carTrim(trim)
-                .shareCode(shareCode)
-                .totalPrice(totalPrice)
+                .shareCode(generateUniqueShareCode())
+                .totalPrice(basePrice.add(optionsCost))
                 .selectedOptions(new HashSet<>(options))
+                .isPublic(Boolean.TRUE.equals(request.isPublic()))
                 .build();
 
         SavedConfig saved = savedConfigRepository.save(savedConfig);
@@ -129,19 +86,91 @@ public class OptionServiceImpl implements OptionService {
     }
 
     @Override
-    public ConfigResponse getByShareCode(String shareCode) {
+    @Transactional(readOnly = true)
+    public ConfigResponse getByShareCode(String shareCode, User currentUser) {
         SavedConfig config = savedConfigRepository.findByShareCode(shareCode)
                 .orElseThrow(() -> new IllegalArgumentException("Конфігурацію за кодом не знайдено: " + shareCode));
 
-        CarTrim trim = config.getCarTrim();
-        BigDecimal basePrice = trim.getCarModel().getBasePrice()
-                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
+        boolean isOwner = currentUser != null
+                && config.getUser() != null
+                && config.getUser().getId().equals(currentUser.getId());
 
-        return mapToSavedConfigResponse(config, basePrice);
+        if (!config.isPublic() && !isOwner) {
+            throw new IllegalArgumentException("Ця конфігурація є приватною");
+        }
+
+        return mapToSavedConfigResponse(config, calculateTrimBasePrice(config.getCarTrim()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConfigResponse> getMyConfigurations(User currentUser) {
+        return savedConfigRepository.findAllByUserIdOrderByCreatedAtDesc(currentUser.getId()).stream()
+                .map(config -> mapToSavedConfigResponse(config, calculateTrimBasePrice(config.getCarTrim())))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public ConfigResponse updateVisibility(Long configId, boolean isPublic, User currentUser) {
+        SavedConfig config = getOwnedConfig(configId, currentUser);
+        config.setPublic(isPublic);
+        SavedConfig updated = savedConfigRepository.save(config);
+        return mapToSavedConfigResponse(updated, calculateTrimBasePrice(updated.getCarTrim()));
+    }
+
+    @Override
+    @Transactional
+    public ConfigResponse cloneByShareCode(String shareCode, User currentUser) {
+        SavedConfig source = savedConfigRepository.findByShareCode(shareCode)
+                .orElseThrow(() -> new IllegalArgumentException("Конфігурацію за кодом не знайдено: " + shareCode));
+
+        boolean isOwner = source.getUser() != null && source.getUser().getId().equals(currentUser.getId());
+        if (!source.isPublic() && !isOwner) {
+            throw new IllegalArgumentException("Неможливо скопіювати приватну конфігурацію");
+        }
+
+        SavedConfig copy = SavedConfig.builder()
+                .user(currentUser)
+                .carTrim(source.getCarTrim())
+                .shareCode(generateUniqueShareCode())
+                .totalPrice(source.getTotalPrice())
+                .selectedOptions(new HashSet<>(source.getSelectedOptions()))
+                .isPublic(false)
+                .build();
+
+        SavedConfig savedCopy = savedConfigRepository.save(copy);
+        return mapToSavedConfigResponse(savedCopy, calculateTrimBasePrice(savedCopy.getCarTrim()));
+    }
+
+    @Override
+    @Transactional
+    public void deleteConfiguration(Long configId, User currentUser) {
+        SavedConfig config = getOwnedConfig(configId, currentUser);
+        savedConfigRepository.delete(config);
+    }
+
+    private SavedConfig getOwnedConfig(Long configId, User currentUser) {
+        SavedConfig config = savedConfigRepository.findById(configId)
+                .orElseThrow(() -> new IllegalArgumentException("Конфігурацію не знайдено: " + configId));
+
+        if (config.getUser() == null || !config.getUser().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException("У вас немає доступу до цієї конфігурації");
+        }
+        return config;
+    }
+
+    private BigDecimal calculateTrimBasePrice(CarTrim trim) {
+        return trim.getCarModel().getBasePrice()
+                .add(trim.getPriceModifier() != null ? trim.getPriceModifier() : BigDecimal.ZERO);
     }
 
     private String generateUniqueShareCode() {
-        return UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        String code;
+        do {
+            code = "NK-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        } while (savedConfigRepository.existsByShareCode(code));
+        return code;
     }
 
     private OptionDto mapToOptionDto(Option opt) {
@@ -173,6 +202,7 @@ public class OptionServiceImpl implements OptionService {
                 basePrice,
                 config.getTotalPrice(),
                 optionDtos,
+                config.isPublic(),
                 config.getCreatedAt()
         );
     }

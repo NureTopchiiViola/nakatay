@@ -5,16 +5,18 @@ import com.nakatay.backend.dto.request.PriceRequest;
 import com.nakatay.backend.dto.response.ConfigResponse;
 import com.nakatay.backend.dto.response.OptionDto;
 import com.nakatay.backend.dto.response.PriceResponse;
-import com.nakatay.backend.models.Option;
-import com.nakatay.backend.models.SavedConfig;
+import com.nakatay.backend.models.User;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 
 public interface OptionService {
-    public List<OptionDto> getOptionsForTrim(Long trimId);
-    public PriceResponse calculatePrice(PriceRequest request);
-    public ConfigResponse getByShareCode(String shareCode);
-    public ConfigResponse saveConfiguration(ConfigRequest request);
+    List<OptionDto> getOptionsForTrim(Long trimId);
+    PriceResponse calculatePrice(PriceRequest request);
+    ConfigResponse saveConfiguration(ConfigRequest request, User currentUser);
+    ConfigResponse getByShareCode(String shareCode, User currentUser);
+    List<ConfigResponse> getMyConfigurations(User currentUser);
+    ConfigResponse updateVisibility(Long configId, boolean isPublic, User currentUser);
+    ConfigResponse cloneByShareCode(String shareCode, User currentUser);
+    void deleteConfiguration(Long configId, User currentUser);
 }

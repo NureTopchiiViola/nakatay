@@ -21,8 +21,9 @@ public class SavedConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "car_trim_id", nullable = false)
@@ -34,6 +35,7 @@ public class SavedConfig {
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "config_option_map",
@@ -44,6 +46,8 @@ public class SavedConfig {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Builder.Default
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = false;
 

@@ -217,7 +217,7 @@ export function CarDetails() {
           <h2 className="section-title">Розпочати покупку</h2>
 
           <div className="purchase-options-grid">
-            <button className="purchase-card active" onClick={scrollToPurchase}>
+            <button className="purchase-card active" onClick={() => navigate(`/order/${car.id}`)}>
               <h4>Подати заявку на придбання</h4>
               <p>{formattedPrice} ₴</p>
             </button>
@@ -255,7 +255,7 @@ export function CarDetails() {
 
             <div className="summary-actions">
               <div className="action-group">
-                <Button variant="solid" className="full-width">Подати заявку на придбання</Button>
+                <Button variant="solid" className="full-width" onClick={() => navigate(`/order/${car.id}`)}>Подати заявку на придбання</Button>
                 <span className="action-helper-text">Без грошових передплат та прив'язки картки.</span>
               </div>
               <div className="action-group">

@@ -14,6 +14,7 @@ import { Profile } from './pages/Profile/Profile';
 import { Favorites } from './pages/Favorites/Favorites';
 import { FavoritesProvider } from './context/FavoritesContext';
 import { AuthModalProvider } from './context/AuthModalProvider';
+import { Applications } from './pages/Applications/Applications';
 
 export default function App() {
   return (
@@ -32,6 +33,10 @@ export default function App() {
                   <Route path="/create" element={<Configurator />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/order/:id" element={<Checkout />} />
+                  <Route
+                    path="/orders"
+                    element={<ProtectedRoute><Applications /></ProtectedRoute>}
+                  />
                   <Route
                     path="/favorites"
                     element={<ProtectedRoute><Favorites /></ProtectedRoute>}

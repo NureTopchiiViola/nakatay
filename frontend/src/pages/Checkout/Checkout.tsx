@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL, getCarImageUrls } from '../../api';
 import { getUserProfile } from '../../auth/userProfile';
 import type { UserProfile } from '../../auth/userProfile';
+import { createMockApplication } from '../../mocks/applications';
 import type { CarDetailsData } from '../../types/Car';
 import {
   configurationFromSearch,
@@ -60,6 +61,7 @@ function validateContact(field: ContactField, value: string): string {
 }
 
 export function Checkout() {
+  const navigate = useNavigate();
   const { id: routeCarId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const carId = routeCarId ?? searchParams.get('carId');
@@ -117,7 +119,34 @@ export function Checkout() {
     setSubmitMessage('');
 
     if (Object.values(nextErrors).some(Boolean) || !hasAcceptedTerms) return;
-    setSubmitMessage('Форму перевірено, але backend поки не має endpoint для створення заявки.');
+    if (carId && !car) {
+      setSubmitMessage('Зачекайте, поки завантажаться дані автомобіля.');
+      return;
+    }
+
+    try {
+      const application = createMockApplication({
+        carId: car?.id ?? null,
+        vehicleName: carName,
+        year: car?.year ?? null,
+        imageUrl: image ?? '',
+        color: isConfiguratorOrder ? selections.paint.name : '',
+        selectedOptions: isConfiguratorOrder
+          ? [selections.wheels.name, selections.interior.summary, selections.package.name]
+          : [],
+        totalPrice: total,
+        paymentMethod,
+        contact,
+      });
+      if (localStorage.getItem('accessToken')) {
+        navigate('/orders', { state: { createdApplicationId: application.id } });
+      } else {
+        setSubmitMessage('Заявку збережено. Історія заявок доступна після входу через профіль користувача.');
+      }
+    } catch (error) {
+      console.error('Не вдалося зберегти демонстраційну заявку:', error);
+      setSubmitMessage('Не вдалося зберегти заявку в цьому браузері. Перевірте доступ до локального сховища.');
+    }
   }
 
   const carName = car ? `${car.brand} ${car.modelName} ${car.trimName}` : MODEL_NAME;

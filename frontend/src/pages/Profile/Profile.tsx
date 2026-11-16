@@ -99,6 +99,9 @@ export function Profile() {
         </div>
 
         <div className="profile-actions">
+          <Button variant="outline" onClick={() => navigate('/orders')}>
+            Історія та статус заявок
+          </Button>
           <Button variant="outline" onClick={handleLogout}>
             Вийти з акаунту
           </Button>

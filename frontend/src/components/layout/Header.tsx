@@ -49,7 +49,6 @@ export function Header() {
           <NavLink to="/compare" className={({ isActive }) => isActive ? 'active' : undefined}>
             Порівняти
           </NavLink>
-
           {isAuthenticated && isAdminOrModerator && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : undefined} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <MdAdminPanelSettings size={18} />

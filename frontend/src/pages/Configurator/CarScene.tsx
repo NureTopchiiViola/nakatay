@@ -48,7 +48,7 @@ export default function CarScene({ configuration, mode, angle, cameraView, reset
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1;
     renderer.domElement.setAttribute('aria-label', 'Модель автомобіля. Перетягніть або використайте стрілки для обертання. Прокрутка чи клавіші плюс і мінус змінюють наближення.');

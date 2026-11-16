@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MdClose, MdAdd } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
-import { useCarComparison } from '../../context/CarComparisonContext';
-import { API_BASE_URL } from '../../api';
+import { useCarComparison } from '../../context/useCarComparison';
+import { API_BASE_URL, getCarImageUrls } from '../../api';
 import type { CarDetailsData } from '../../types/Car';
 import './CarComparison.css';
 
@@ -35,37 +35,41 @@ export function CarComparison({ onNavigateToCatalog }: CarComparisonProps) {
   };
 
   useEffect(() => {
+    let active = true;
     const fetchCars = async () => {
       if (comparedCarIds.length === 0) {
-        setCars([]);
+        if (active) setCars([]);
         return;
       }
       
-      setIsLoading(true);
+      if (active) setIsLoading(true);
       try {
         const promises = comparedCarIds.map(id => 
           fetch(`${API_BASE_URL}/api/cars/${id}`, {
-            headers: { 
-              'Accept': 'application/json',
-              'ngrok-skip-browser-warning': 'true'
-            },
+            headers: { 'Accept': 'application/json' },
           }).then(res => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json();
           })
         );
         
-        const results = await Promise.all(promises);
-        setCars(results);
+        const results = (await Promise.all(promises)).map((car: CarDetailsData) => ({
+          ...car,
+          galleryUrls: getCarImageUrls(car.galleryUrls),
+        }));
+        if (active) setCars(results);
       } catch (error) {
-        console.error("Помилка завантаження даних порівняння:", error);
-        setCars([]);
+        if (active) {
+          console.error("Помилка завантаження даних порівняння:", error);
+          setCars([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
     
-    fetchCars();
+    void fetchCars();
+    return () => { active = false; };
   }, [comparedCarIds]);
 
   const visibleSpecs = useMemo(() => {

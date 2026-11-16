@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { API_BASE_URL } from '../../api';
+import { API_BASE_URL, getCarImageUrls } from '../../api';
 import { getUserProfile } from '../../auth/userProfile';
 import type { UserProfile } from '../../auth/userProfile';
 import type { CarDetailsData } from '../../types/Car';
@@ -84,14 +84,14 @@ export function Checkout() {
     if (!carId) return;
     let active = true;
     fetch(`${API_BASE_URL}/api/cars/${carId}`, {
-      headers: { Accept: 'application/json', 'ngrok-skip-browser-warning': 'true' },
+      headers: { Accept: 'application/json' },
     })
       .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json() as Promise<CarDetailsData>;
       })
       .then(data => {
-        if (active) setCar(data);
+        if (active) setCar({ ...data, galleryUrls: getCarImageUrls(data.galleryUrls) });
       })
       .catch(error => {
         console.error('Не вдалося завантажити автомобіль для заявки:', error);

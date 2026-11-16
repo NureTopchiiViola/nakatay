@@ -1,6 +1,7 @@
 import { MdClose } from 'react-icons/md';
 import { GoogleLogin } from '@react-oauth/google';
 import { getUserProfile } from '../../auth/userProfile';
+import { API_BASE_URL } from '../../api';
 import './AuthModal.css';
 
 interface AuthModalProps {
@@ -11,36 +12,37 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
-const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
-  const googleToken = credentialResponse.credential;
-  if (!googleToken) return;
-  
-  try {
-    const response = await fetch('http://localhost:8081/api/auth/google', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token: googleToken }),
-    });
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    const googleToken = credentialResponse.credential;
+    if (!googleToken) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: googleToken }),
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      
-      window.localStorage.setItem('accessToken', data.accessToken);
-      window.localStorage.setItem('userProfile', JSON.stringify(getUserProfile(googleToken)));
-      
-      console.log('auth success');
-      onClose();
-      
-      window.location.reload(); 
-    } else {
-      console.error('bad response from server:', response.status, await response.text());
+      if (response.ok) {
+        const data = await response.json();
+        
+        window.localStorage.setItem('accessToken', data.accessToken);
+        if (data.role) {
+          window.localStorage.setItem('userRole', data.role);
+        }
+        window.localStorage.setItem('userProfile', JSON.stringify(getUserProfile(googleToken)));
+        
+        onClose();
+        window.location.reload();
+      } else {
+        console.error('bad response from server:', response.status, await response.text());
+      }
+    } catch (error) {
+      console.error('Error occurred while fetching auth data:', error);
     }
-  } catch (error) {
-    console.error('Error occurred while fetching auth data:', error);
-  }
-};
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>

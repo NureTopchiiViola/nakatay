@@ -1,25 +1,26 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { MdOutlinePerson, MdOutlineFavoriteBorder } from 'react-icons/md';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { MdOutlinePerson, MdOutlineFavoriteBorder, MdAdminPanelSettings } from 'react-icons/md';
 import { Button } from '../../components/ui/Button';
-import { AuthModal } from '../../components/auth/AuthModal'; 
+import { AuthModal } from '../../components/auth/AuthModal';
 
 export function Header() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // temporary authentication check
   const isAuthenticated = !!localStorage.getItem('accessToken');
+  const userRole = localStorage.getItem('userRole');
+  const isAdminOrModerator = userRole === 'Admin' || userRole === 'Moderator';
 
   const handleUserIconClick = () => {
     if (isAuthenticated) {
-      // navigate('/profile');
-      console.log("Перехід в профіль");
+      navigate('/profile');
     } else {
       setIsAuthModalOpen(true);
     }
   };
 
- return (
+  return (
     <>
       <header className="site-header">
         <Link aria-label="Nakatay — на головну" className="wordmark" to="/">
@@ -39,6 +40,13 @@ export function Header() {
           <NavLink to="/compare" className={({ isActive }) => isActive ? 'active' : undefined}>
             Порівняти
           </NavLink>
+
+          {isAuthenticated && isAdminOrModerator && (
+            <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : undefined} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <MdAdminPanelSettings size={18} />
+              Панель керування
+            </NavLink>
+          )}
         </nav>
         
         <div className="header-actions">
@@ -59,7 +67,6 @@ export function Header() {
             onClose={() => setIsAuthModalOpen(false)} 
           />
         </div>
-        
       </header>
     </>
   );

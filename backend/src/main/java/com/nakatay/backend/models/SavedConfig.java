@@ -44,6 +44,8 @@ public class SavedConfig {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = false;
 
     @PrePersist
     protected void onCreate() {

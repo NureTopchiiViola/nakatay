@@ -150,6 +150,7 @@ export interface CustomerOrder {
   totalPrice: number;
   status: OrderStatus;
   paymentMethod: OrderPaymentMethod | null;
+  configurationData: string | null;
   contact: {
     name: string | null;
     phone: string | null;
@@ -169,6 +170,7 @@ export interface CreateOrderRequest {
   contactName: string;
   contactPhone: string;
   contactEmail: string;
+  configurationData: string | null;
 }
 
 export async function createOrder(order: CreateOrderRequest): Promise<CustomerOrder> {
@@ -235,6 +237,7 @@ function isCustomerOrder(value: unknown): value is CustomerOrder {
     && typeof order.totalPrice === 'number'
     && ['new', 'in_progress', 'completed', 'cancelled'].includes(String(order.status))
     && (['cash', 'leasing', 'credit'].includes(String(order.paymentMethod)) || order.paymentMethod === null)
+    && (typeof order.configurationData === 'string' || order.configurationData === null)
     && typeof contact === 'object'
     && contact !== null
     && ['name', 'phone', 'email'].every(field =>

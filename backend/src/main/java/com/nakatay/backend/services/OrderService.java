@@ -66,6 +66,7 @@ public class OrderService {
         order.setImageUrl(imageUrl);
         order.setColor(request.color() == null ? "" : request.color().trim());
         order.setSelectedOptions(writeSelectedOptions(request.selectedOptions()));
+        order.setConfigurationData(request.configurationData());
         order.setTotalPrice(totalPrice);
         order.setStatus("NEW");
         order.setPaymentMethod(request.paymentMethod().trim().toLowerCase(Locale.ROOT));
@@ -139,6 +140,7 @@ public class OrderService {
                 order.getTotalPrice(),
                 order.getStatus().toLowerCase(Locale.ROOT),
                 order.getPaymentMethod(),
+                order.getConfigurationData(),
                 new OrderResponse.Contact(
                         order.getContactName(),
                         order.getContactPhone(),

@@ -9,6 +9,7 @@ import { useAuthModal } from '../../context/useAuthModal';
 import type { CarDetailsData } from '../../types/Car';
 import {
   configurationFromSearch,
+  configurationToSearch,
   getQuote,
   getSelections,
   formatMoney,
@@ -148,6 +149,7 @@ export function Checkout() {
         contactName: contact.name.trim(),
         contactPhone: contact.phone.trim(),
         contactEmail: contact.email.trim(),
+        configurationData: isConfiguratorOrder ? configurationToSearch(configuration) : null,
       });
       navigate('/orders', { state: { createdApplicationId: String(application.id) } });
     } catch (error) {

@@ -49,13 +49,15 @@ class OrderServiceTest {
                 "cash",
                 "Олена Коваль",
                 "+380671234567",
-                "olena@example.com"
+                "olena@example.com",
+                "paint=crimson"
         );
 
         var response = orderService.createOrder(customer, request);
 
         assertEquals("BMW E46 328i Sport", response.vehicleName());
         assertEquals(List.of("Sport wheels"), response.selectedOptions());
+        assertEquals("paint=crimson", response.configurationData());
         assertEquals("new", response.status());
         assertEquals("Олена Коваль", response.contact().name());
         verify(orderRepository).save(any(CustomerOrder.class));
@@ -94,7 +96,8 @@ class OrderServiceTest {
                 "cash",
                 "Олена Коваль",
                 "+380671234567",
-                "olena@example.com"
+                "olena@example.com",
+                "paint=crimson"
         );
 
         assertThrows(IllegalArgumentException.class, () -> orderService.createOrder(

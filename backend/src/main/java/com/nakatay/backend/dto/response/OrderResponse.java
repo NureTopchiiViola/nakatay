@@ -16,6 +16,7 @@ public record OrderResponse(
         BigDecimal totalPrice,
         String status,
         String paymentMethod,
+        String configurationData,
         Contact contact
 ) {
     public record Contact(String name, String phone, String email) {}

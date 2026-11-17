@@ -1,19 +1,14 @@
 import { createContext } from 'react';
-
-export interface FavoriteCar {
-  id: number;
-  imageSrc: string;
-  title: string;
-  year: string | number;
-  engine: string;
-  transmission: string;
-  price: string;
-}
+import type { FavoriteCar } from '../api';
 
 interface FavoritesContextType {
   favorites: FavoriteCar[];
+  isLoading: boolean;
+  error: string | null;
   isFavorite: (id: number) => boolean;
-  toggleFavorite: (car: FavoriteCar) => void;
+  isPending: (id: number) => boolean;
+  toggleFavorite: (car: FavoriteCar) => Promise<void>;
+  refreshFavorites: () => Promise<void>;
 }
 
 export const FavoritesContextValue = createContext<FavoritesContextType | undefined>(undefined);

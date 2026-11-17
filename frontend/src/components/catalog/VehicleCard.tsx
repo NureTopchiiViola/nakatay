@@ -33,7 +33,7 @@ export function VehicleCard({
   
   const { toggleCompare, isInComparison } = useCarComparison();
   const currentlyCompared = isInComparison(id);
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, isPending, toggleFavorite } = useFavorites();
   const { openAuthModal } = useAuthModal();
   const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
   const currentlyFavorite = isAuthenticated && isFavorite(id);
@@ -71,12 +71,13 @@ export function VehicleCard({
             />
             <Button
               variant="ghost"
+              disabled={isPending(id)}
               onClick={() => {
                 if (!isAuthenticated) {
                   openAuthModal();
                   return;
                 }
-                toggleFavorite(favoriteCar);
+                void toggleFavorite(favoriteCar);
               }}
               aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
               aria-pressed={currentlyFavorite}

@@ -41,6 +41,7 @@ export function Profile() {
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userRole');
+    window.dispatchEvent(new Event('nakatay-auth-changed'));
     navigate('/');
   };
 

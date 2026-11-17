@@ -3,7 +3,12 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
 import { CarViewer } from './CarViewer';
-import { saveCustomBuild, updateCustomBuild } from '../../api';
+import {
+  createPublicCustomBuildShare,
+  fetchPublicCustomBuildShare,
+  saveCustomBuild,
+  updateCustomBuild,
+} from '../../api';
 import { useAuthModal } from '../../context/useAuthModal';
 import {
   BASE_PRICE, MODEL_NAME, PAINTS, WHEELS, INTERIORS, DECORS, PACKAGES, EXTRAS,
@@ -39,7 +44,9 @@ export function Configurator() {
 
 function ConfiguratorPage({ search }: { search: string }) {
   const [configuration, setConfiguration] = useState<Configuration>(() => configurationFromSearch(search));
-  const buildIdParam = new URLSearchParams(search).get('buildId');
+  const searchParams = new URLSearchParams(search);
+  const buildIdParam = searchParams.get('buildId');
+  const publicShareCodeParam = searchParams.get('shareCode');
   const navigate = useNavigate();
   const { openAuthModal } = useAuthModal();
   const [tab, setTab] = useState<Tab>('exterior');
@@ -47,8 +54,14 @@ function ConfiguratorPage({ search }: { search: string }) {
   const [promoError, setPromoError] = useState('');
   const [notice, setNotice] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingSharedBuild, setIsLoadingSharedBuild] = useState(publicShareCodeParam !== null);
+  const [sharedBuildError, setSharedBuildError] = useState('');
   const [modal, setModal] = useState<'share' | 'application' | null>(null);
   const [shareLink, setShareLink] = useState('');
+  const [shareCode, setShareCode] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [shareNotice, setShareNotice] = useState('');
   const dialogRef = useRef<HTMLDialogElement>(null);
   const selected = getSelections(configuration);
   const quote = getQuote(configuration);
@@ -58,6 +71,21 @@ function ConfiguratorPage({ search }: { search: string }) {
     const timer = window.setTimeout(() => setNotice(''), 5000);
     return () => window.clearTimeout(timer);
   }, [notice]);
+  useEffect(() => {
+    if (publicShareCodeParam === null) return;
+    const controller = new AbortController();
+    fetchPublicCustomBuildShare(publicShareCodeParam, controller.signal)
+      .then(sharedBuild => setConfiguration(normalizeConfiguration(sharedBuild.configuration)))
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        console.error('Не вдалося завантажити публічну збірку:', error);
+        setSharedBuildError('Не вдалося завантажити публічну збірку. Посилання недійсне або тимчасово недоступне.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingSharedBuild(false);
+      });
+    return () => controller.abort();
+  }, [publicShareCodeParam]);
   useEffect(() => {
     if (modal) dialogRef.current?.showModal();
     else dialogRef.current?.close();
@@ -111,14 +139,30 @@ function ConfiguratorPage({ search }: { search: string }) {
     }
   }
   function openShare() {
-    const url = new URL('/create', window.location.origin);
-    url.search = configurationToSearch(configuration);
-    setShareLink(url.toString());
     setModal('share');
+    void generateShareLink();
   }
-  async function copyLink() {
-    try { await navigator.clipboard.writeText(shareLink); setNotice('Посилання скопійовано.'); }
-    catch { setNotice('Не вдалося скопіювати. Виділіть посилання та скопіюйте його вручну.'); }
+  async function generateShareLink() {
+    setIsSharing(true);
+    setShareError('');
+    setShareNotice('');
+    setShareLink('');
+    setShareCode('');
+    try {
+      const sharedBuild = await createPublicCustomBuildShare(MODEL_NAME, configuration);
+      setShareCode(sharedBuild.shareCode);
+      setShareLink(new URL(sharedBuild.url, window.location.origin).toString());
+    } catch (error) {
+      console.error('Не вдалося створити публічне посилання:', error);
+      setShareError('Не вдалося створити публічне посилання. Перевірте з’єднання та спробуйте ще раз.');
+    } finally {
+      setIsSharing(false);
+    }
+  }
+  async function copyShareValue(value: string, label: string) {
+    if (!value) return;
+    try { await navigator.clipboard.writeText(value); setShareNotice(`${label} скопійовано.`); }
+    catch { setShareNotice('Не вдалося скопіювати. Виділіть значення та скопіюйте його вручну.'); }
   }
   function downloadSpecification() {
     const blob = new Blob([JSON.stringify({ model: MODEL_NAME, configuration, specification: selected, estimate: quote }, null, 2)], { type: 'application/json' });
@@ -148,6 +192,20 @@ function ConfiguratorPage({ search }: { search: string }) {
         <span className="configurator-option-price">+{formatMoney(item.price)}</span>
       </label>;
     });
+  }
+
+  if (isLoadingSharedBuild) {
+    return <div className="configurator-page configurator-shared-state" role="status">Завантажуємо публічну збірку…</div>;
+  }
+  if (sharedBuildError) {
+    return (
+      <div className="configurator-page configurator-shared-state">
+        <p role="alert">{sharedBuildError}</p>
+        <button type="button" className="configurator-primary" onClick={() => navigate('/create')}>
+          Відкрити конфігуратор
+        </button>
+      </div>
+    );
   }
 
   return <div className="configurator-page" id="configurator">
@@ -252,9 +310,32 @@ function ConfiguratorPage({ search }: { search: string }) {
       <button type="button" className="configurator-dialog-close" onClick={() => setModal(null)} aria-label="Закрити"><MdClose /></button>
       {modal === 'share' && <>
         <h2>Поділитися конфігурацією</h2><p>Посилання містить усі вибрані параметри автомобіля.</p>
-        <label htmlFor="configuration-link">Посилання на вашу конфігурацію</label>
-        <input id="configuration-link" readOnly value={shareLink} onFocus={event => event.currentTarget.select()} />
-        <button type="button" className="configurator-primary" onClick={copyLink}><MdContentCopy /> Копіювати посилання</button>
+        {isSharing && <p className="configurator-share-status" role="status">Створюємо публічне посилання…</p>}
+        {shareError && <>
+          <p className="configurator-share-error" role="alert">{shareError}</p>
+          <button type="button" className="configurator-primary" onClick={() => void generateShareLink()} disabled={isSharing}>
+            Спробувати ще
+          </button>
+        </>}
+        {shareLink && <>
+          <label htmlFor="configuration-link">1. Посилання</label>
+          <div className="configurator-share-field">
+            <input id="configuration-link" readOnly value={shareLink} onFocus={event => event.currentTarget.select()} />
+            <button type="button" onClick={() => void copyShareValue(shareLink, 'Посилання')}>Копіювати</button>
+          </div>
+          <label htmlFor="configuration-share-code">2. Короткий код</label>
+          <div className="configurator-share-field">
+            <input id="configuration-share-code" readOnly value={shareCode} onFocus={event => event.currentTarget.select()} />
+            <button
+              type="button"
+              aria-label="Скопіювати короткий код"
+              onClick={() => void copyShareValue(shareCode, 'Код')}
+            >
+              <MdContentCopy />
+            </button>
+          </div>
+        </>}
+        {shareNotice && <p className="configurator-share-notice" role="status">{shareNotice}</p>}
       </>}
       {modal === 'application' && <>
         <span className="configurator-eyebrow">ВАША КОНФІГУРАЦІЯ</span><h2>{MODEL_NAME}</h2>

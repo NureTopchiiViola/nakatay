@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/configurator/trims/*/options").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/configurator/calculate").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/configurator/share/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/configurator/custom-builds/share").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/configurator/custom-builds/share/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
 

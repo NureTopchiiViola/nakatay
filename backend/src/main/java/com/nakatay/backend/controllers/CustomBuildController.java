@@ -2,6 +2,7 @@ package com.nakatay.backend.controllers;
 
 import com.nakatay.backend.dto.request.SaveCustomBuildRequest;
 import com.nakatay.backend.dto.response.SavedCustomBuildResponse;
+import com.nakatay.backend.dto.response.SharedCustomBuildResponse;
 import com.nakatay.backend.models.User;
 import com.nakatay.backend.services.CustomBuildService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,19 @@ public class CustomBuildController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(customBuildService.saveBuild(currentUser, request));
+    }
+
+    @PostMapping("/share")
+    public ResponseEntity<SharedCustomBuildResponse> createPublicShare(
+            @RequestBody SaveCustomBuildRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(customBuildService.createPublicShare(request));
+    }
+
+    @GetMapping("/share/{shareCode}")
+    public SharedCustomBuildResponse getPublicShare(@PathVariable String shareCode) {
+        return customBuildService.getPublicShare(shareCode);
     }
 
     @GetMapping

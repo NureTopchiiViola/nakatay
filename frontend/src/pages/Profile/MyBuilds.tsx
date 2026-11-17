@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdDirectionsCarFilled } from 'react-icons/md';
-import { fetchCustomBuilds } from '../../api';
-import type { SavedCustomBuild } from '../../api';
+import { MdContentCopy, MdDirectionsCarFilled, MdOutlineShare } from 'react-icons/md';
+import { createPublicCustomBuildShare, fetchCustomBuilds } from '../../api';
+import type { SavedCustomBuild, SharedCustomBuild } from '../../api';
 import {
   EXTRAS,
   getQuote,
@@ -29,6 +29,34 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
   const selected = getSelections(build.configuration);
   const quote = getQuote(build.configuration);
   const extras = EXTRAS.filter(extra => build.configuration.extras.includes(extra.id));
+  const [sharedBuild, setSharedBuild] = useState<SharedCustomBuild | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [shareNotice, setShareNotice] = useState('');
+  const shareUrl = sharedBuild ? new URL(sharedBuild.url, window.location.origin).toString() : '';
+
+  async function shareBuild() {
+    setIsSharing(true);
+    setShareError('');
+    setShareNotice('');
+    try {
+      setSharedBuild(await createPublicCustomBuildShare(build.modelName, build.configuration));
+    } catch (error) {
+      console.error('Не вдалося створити публічне посилання для збірки:', error);
+      setShareError('Не вдалося створити посилання. Перевірте з’єднання та спробуйте ще раз.');
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  async function copyShareValue(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setShareNotice(`${label} скопійовано.`);
+    } catch {
+      setShareNotice('Не вдалося скопіювати. Виділіть значення та скопіюйте його вручну.');
+    }
+  }
 
   return (
     <article className="saved-build-card">
@@ -67,7 +95,43 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
           <Link className="saved-build-order" to={`/checkout?${getBuildSearch(build)}`}>
             Оформити заявку
           </Link>
+          <button type="button" onClick={() => void shareBuild()} disabled={isSharing} aria-busy={isSharing}>
+            <MdOutlineShare />
+            {isSharing ? 'Створюємо посилання…' : sharedBuild ? 'Створити нове посилання' : 'Поділитися'}
+          </button>
         </div>
+        {isSharing && <p className="saved-build-share-status" role="status">Створюємо публічне посилання…</p>}
+        {shareError && <p className="saved-build-share-error" role="alert">{shareError}</p>}
+        {sharedBuild && (
+          <div className="saved-build-share" aria-label="Публічне посилання на збірку">
+            <p>Публічне посилання готове. Його можна надіслати іншим.</p>
+            <label htmlFor={`saved-build-link-${build.id}`}>Посилання</label>
+            <div className="saved-build-share-field">
+              <input
+                id={`saved-build-link-${build.id}`}
+                readOnly
+                value={shareUrl}
+                onFocus={event => event.currentTarget.select()}
+              />
+              <button type="button" onClick={() => void copyShareValue(shareUrl, 'Посилання')}>
+                <MdContentCopy /> Копіювати
+              </button>
+            </div>
+            <label htmlFor={`saved-build-code-${build.id}`}>Короткий код</label>
+            <div className="saved-build-share-field">
+              <input
+                id={`saved-build-code-${build.id}`}
+                readOnly
+                value={sharedBuild.shareCode}
+                onFocus={event => event.currentTarget.select()}
+              />
+              <button type="button" onClick={() => void copyShareValue(sharedBuild.shareCode, 'Код')}>
+                <MdContentCopy /> Копіювати
+              </button>
+            </div>
+            {shareNotice && <p className="saved-build-share-status" role="status">{shareNotice}</p>}
+          </div>
+        )}
       </div>
     </article>
   );

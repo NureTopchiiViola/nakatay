@@ -124,6 +124,14 @@ export interface SavedCustomBuild {
   createdAt: string;
 }
 
+export interface SharedCustomBuild {
+  shareCode: string;
+  url: string;
+  modelName: string;
+  configuration: Configuration;
+  createdAt: string;
+}
+
 export async function saveCustomBuild(
   modelName: string,
   configuration: Configuration,
@@ -204,22 +212,86 @@ export async function fetchCustomBuilds(signal?: AbortSignal): Promise<SavedCust
   return data;
 }
 
+export async function createPublicCustomBuildShare(
+  modelName: string,
+  configuration: Configuration,
+  signal?: AbortSignal,
+): Promise<SharedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds/share`, {
+    method: 'POST',
+    signal,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Public custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSharedCustomBuild(data)) {
+    throw new Error('The public custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function fetchPublicCustomBuildShare(
+  shareCode: string,
+  signal?: AbortSignal,
+): Promise<SharedCustomBuild> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/configurator/custom-builds/share/${encodeURIComponent(shareCode)}`,
+    {
+      signal,
+      headers: { Accept: 'application/json' },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Public custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSharedCustomBuild(data)) {
+    throw new Error('The public custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
 function isSavedCustomBuild(value: unknown): value is SavedCustomBuild {
   if (!value || typeof value !== 'object') return false;
   const build = value as Record<string, unknown>;
-  const configuration = build.configuration;
-  if (!configuration || typeof configuration !== 'object') return false;
-  const selected = configuration as Record<string, unknown>;
   return Number.isSafeInteger(build.id)
     && typeof build.modelName === 'string'
     && typeof build.createdAt === 'string'
-    && ['graphite', 'titanium', 'sapphire', 'crimson', 'obsidian'].includes(String(selected.paint))
-    && ['alloy', 'forged', 'carbon'].includes(String(selected.wheels))
-    && ['black', 'cognac', 'ivory'].includes(String(selected.interior))
-    && ['carbon', 'wood'].includes(String(selected.decor))
-    && ['standard', 'comfort', 'sport'].includes(String(selected.package))
-    && Array.isArray(selected.extras)
-    && selected.extras.every(extra => ['spoiler', 'matrix', 'night', 'recorder'].includes(String(extra)));
+    && isConfiguration(build.configuration);
+}
+
+function isSharedCustomBuild(value: unknown): value is SharedCustomBuild {
+  if (!value || typeof value !== 'object') return false;
+  const build = value as Record<string, unknown>;
+  return typeof build.shareCode === 'string'
+    && build.shareCode.length > 0
+    && typeof build.url === 'string'
+    && build.url.startsWith('/create?shareCode=')
+    && typeof build.modelName === 'string'
+    && typeof build.createdAt === 'string'
+    && isConfiguration(build.configuration);
+}
+
+function isConfiguration(value: unknown): value is Configuration {
+  if (!value || typeof value !== 'object') return false;
+  const configuration = value as Record<string, unknown>;
+  return ['graphite', 'titanium', 'sapphire', 'crimson', 'obsidian'].includes(String(configuration.paint))
+    && ['alloy', 'forged', 'carbon'].includes(String(configuration.wheels))
+    && ['black', 'cognac', 'ivory'].includes(String(configuration.interior))
+    && ['carbon', 'wood'].includes(String(configuration.decor))
+    && ['standard', 'comfort', 'sport'].includes(String(configuration.package))
+    && Array.isArray(configuration.extras)
+    && configuration.extras.every(extra => ['spoiler', 'matrix', 'night', 'recorder'].includes(String(extra)));
 }
 
 function isFavoriteCarResponse(value: unknown): value is FavoriteCarResponse {

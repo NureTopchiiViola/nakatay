@@ -15,13 +15,20 @@ function EmptyFavoritesIllustration() {
 }
 
 export function Favorites() {
-  const { favorites } = useFavorites();
+  const { favorites, isLoading, error, refreshFavorites } = useFavorites();
 
   return (
     <section className="favorites-page" aria-labelledby="favorites-title">
       <h1 id="favorites-title">Обрані автомобілі{favorites.length > 0 ? ` (${favorites.length})` : ''}</h1>
 
-      {favorites.length === 0 ? (
+      {isLoading ? (
+        <p className="favorites-message" role="status">Завантажуємо обране…</p>
+      ) : error ? (
+        <div className="favorites-message favorites-error" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={() => void refreshFavorites()}>Спробувати ще раз</button>
+        </div>
+      ) : favorites.length === 0 ? (
         <div className="favorites-empty">
           <EmptyFavoritesIllustration />
           <h2>Ваш список обраного порожній</h2>

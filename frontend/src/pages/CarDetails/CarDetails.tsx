@@ -49,7 +49,7 @@ export function CarDetails() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
   const { toggleCompare, isInComparison } = useCarComparison();
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, isPending, toggleFavorite } = useFavorites();
   const { openAuthModal } = useAuthModal();
   const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
   const currentlyCompared = car ? isInComparison(car.id) : false;
@@ -154,13 +154,14 @@ export function CarDetails() {
               className="favorite-btn"
               aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
               aria-pressed={currentlyFavorite}
+              disabled={isPending(car.id)}
               onClick={() => {
                 if (!car) return;
                 if (!isAuthenticated) {
                   openAuthModal();
                   return;
                 }
-                toggleFavorite({
+                void toggleFavorite({
                   id: car.id,
                   imageSrc: car.galleryUrls?.[0] ?? '',
                   title: `${car.brand} ${car.modelName} ${car.trimName}`,

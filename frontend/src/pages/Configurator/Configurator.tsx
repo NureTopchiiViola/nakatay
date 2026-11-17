@@ -3,6 +3,8 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
 import { CarViewer } from './CarViewer';
+import { saveCustomBuild } from '../../api';
+import { useAuthModal } from '../../context/useAuthModal';
 import {
   BASE_PRICE, MODEL_NAME, PAINTS, WHEELS, INTERIORS, DECORS, PACKAGES, EXTRAS,
   DEFAULT_CONFIGURATION, configurationFromSearch, configurationToSearch, normalizeConfiguration,
@@ -16,7 +18,6 @@ const TABS = [
   { id: 'packages', label: 'Пакети' }, { id: 'options', label: 'Опції' },
 ] as const;
 type Tab = typeof TABS[number]['id'];
-const DRAFT_KEY = 'nakatay.configurator.draft.v1';
 
 function Choice({ checked, name, value, title, description, price, disabled, visual, onChange }: {
   checked: boolean; name: string; value: string; title: string; description?: string; price: number;
@@ -39,10 +40,12 @@ export function Configurator() {
 function ConfiguratorPage({ search }: { search: string }) {
   const [configuration, setConfiguration] = useState<Configuration>(() => configurationFromSearch(search));
   const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
   const [tab, setTab] = useState<Tab>('exterior');
   const [promo, setPromo] = useState('');
   const [promoError, setPromoError] = useState('');
   const [notice, setNotice] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [modal, setModal] = useState<'share' | 'application' | null>(null);
   const [shareLink, setShareLink] = useState('');
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -68,19 +71,34 @@ function ConfiguratorPage({ search }: { search: string }) {
   function toggleExtra(id: ExtraId) {
     update('extras', configuration.extras.includes(id) ? configuration.extras.filter(value => value !== id) : [...configuration.extras, id]);
   }
-  function saveDraft() {
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(configuration));
-      setNotice('Чернетку збережено в цьому браузері.');
-    } catch { setNotice('Не вдалося зберегти чернетку. Перевірте налаштування сховища браузера.'); }
+  function preserveConfigurationInUrl() {
+    const params = new URLSearchParams(configurationToSearch(configuration));
+    const carId = new URLSearchParams(search).get('carId');
+    if (carId) params.set('carId', carId);
+    navigate(`/create?${params.toString()}`, { replace: true });
   }
-  function restoreDraft() {
+  async function saveBuild() {
+    if (!localStorage.getItem('accessToken')) {
+      preserveConfigurationInUrl();
+      openAuthModal();
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      const draft = localStorage.getItem(DRAFT_KEY);
-      if (!draft) { setNotice('У цьому браузері ще немає збереженої чернетки.'); return; }
-      setConfiguration(normalizeConfiguration(JSON.parse(draft)));
-      setNotice('Збережену чернетку відновлено.');
-    } catch { setNotice('Не вдалося відновити чернетку.'); }
+      const savedBuild = await saveCustomBuild(MODEL_NAME, configuration);
+      setNotice(`Збірку збережено у вашому акаунті (№${savedBuild.id}).`);
+    } catch (error) {
+      console.error('Не вдалося зберегти збірку:', error);
+      if (error instanceof Error && error.message === 'Unauthorized') {
+        preserveConfigurationInUrl();
+        openAuthModal();
+      } else {
+        setNotice('Не вдалося зберегти збірку. Перевірте з’єднання та спробуйте ще раз.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   }
   function openShare() {
     const url = new URL('/create', window.location.origin);
@@ -138,7 +156,6 @@ function ConfiguratorPage({ search }: { search: string }) {
           <div><dt>Салон:</dt><dd>{selected.interior.summary}</dd></div>
           <div><dt>Пакет додатків:</dt><dd>{configuration.package === 'standard' ? 'Стандартний пакет' : selected.package.name}</dd></div>
         </dl>
-        <button className="configurator-restore" type="button" onClick={restoreDraft}>Відновити збережену чернетку</button>
       </section>
 
       <section className="configurator-panel" aria-label="Налаштування автомобіля">
@@ -206,8 +223,10 @@ function ConfiguratorPage({ search }: { search: string }) {
             <div className="configurator-total"><strong>Загальна вартість:</strong><output aria-live="polite" aria-atomic="true">{formatMoney(quote.total)}</output></div>
           </div>
           <div className="configurator-checkout-actions">
-            <button type="button" onClick={saveDraft} title="Зберегти чернетку в цьому браузері"><MdOutlineBookmarkBorder /> Зберегти</button>
             <button type="button" onClick={openShare}><MdOutlineShare /> Поділитися</button>
+            <button type="button" onClick={saveBuild} disabled={isSaving}>
+              <MdOutlineBookmarkBorder /> {isSaving ? 'Зберігаємо…' : 'Зберегти збірку'}
+            </button>
             <button type="button" className="configurator-primary" onClick={() => {
               const params = new URLSearchParams(configurationToSearch(configuration));
               const carId = new URLSearchParams(search).get('carId');

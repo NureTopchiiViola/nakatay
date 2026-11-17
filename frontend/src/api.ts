@@ -1,3 +1,5 @@
+import type { Configuration } from './pages/Configurator/configuration';
+
 export const API_BASE_URL = 'https://nakatay-backend-api-a91c65d785b6.herokuapp.com';
 
 export interface FavoriteCar {
@@ -113,6 +115,59 @@ export function addFavoriteCar(userId: string, trimId: number): Promise<void> {
 
 export function removeFavoriteCar(userId: string, trimId: number): Promise<void> {
   return requestFavoriteCars(userId, trimId, 'DELETE');
+}
+
+export interface SavedCustomBuild {
+  id: number;
+  modelName: string;
+  configuration: Configuration;
+  createdAt: string;
+}
+
+export async function saveCustomBuild(
+  modelName: string,
+  configuration: Configuration,
+): Promise<SavedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSavedCustomBuild(data)) {
+    throw new Error('The custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+function isSavedCustomBuild(value: unknown): value is SavedCustomBuild {
+  if (!value || typeof value !== 'object') return false;
+  const build = value as Record<string, unknown>;
+  const configuration = build.configuration;
+  if (!configuration || typeof configuration !== 'object') return false;
+  const selected = configuration as Record<string, unknown>;
+  return Number.isSafeInteger(build.id)
+    && typeof build.modelName === 'string'
+    && typeof build.createdAt === 'string'
+    && ['graphite', 'titanium', 'sapphire', 'crimson', 'obsidian'].includes(String(selected.paint))
+    && ['alloy', 'forged', 'carbon'].includes(String(selected.wheels))
+    && ['black', 'cognac', 'ivory'].includes(String(selected.interior))
+    && ['carbon', 'wood'].includes(String(selected.decor))
+    && ['standard', 'comfort', 'sport'].includes(String(selected.package))
+    && Array.isArray(selected.extras)
+    && selected.extras.every(extra => ['spoiler', 'matrix', 'night', 'recorder'].includes(String(extra)));
 }
 
 function isFavoriteCarResponse(value: unknown): value is FavoriteCarResponse {

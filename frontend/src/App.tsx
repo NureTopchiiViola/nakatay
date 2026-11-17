@@ -54,8 +54,8 @@ export default function App() {
                   <Route 
                     path="/admin" 
                     element={
-                      <ProtectedRoute requiredRole="Moderator">
-                        <div style={{ padding: '40px' }}><h1>Панель керування</h1></div>
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <Applications />
                       </ProtectedRoute>
                     } 
                   />

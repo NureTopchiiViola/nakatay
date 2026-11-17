@@ -135,6 +135,114 @@ export interface UserProfile {
   role?: string;
 }
 
+export type OrderStatus = 'new' | 'in_progress' | 'completed' | 'cancelled';
+export type OrderPaymentMethod = 'cash' | 'leasing' | 'credit';
+
+export interface CustomerOrder {
+  id: number;
+  createdAt: string;
+  carId: number | null;
+  vehicleName: string;
+  year: number | null;
+  imageUrl: string | null;
+  color: string | null;
+  selectedOptions: string[];
+  totalPrice: number;
+  status: OrderStatus;
+  paymentMethod: OrderPaymentMethod | null;
+  contact: {
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+  };
+}
+
+export interface CreateOrderRequest {
+  carId: number | null;
+  vehicleName: string;
+  year: number | null;
+  imageUrl: string;
+  color: string;
+  selectedOptions: string[];
+  totalPrice: number;
+  paymentMethod: OrderPaymentMethod;
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+}
+
+export async function createOrder(order: CreateOrderRequest): Promise<CustomerOrder> {
+  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(order),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Order request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isCustomerOrder(data)) {
+    throw new Error('The orders endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function fetchOrders(signal?: AbortSignal): Promise<CustomerOrder[]> {
+  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    signal,
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Order request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data) || !data.every(isCustomerOrder)) {
+    throw new Error('The orders endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+function isCustomerOrder(value: unknown): value is CustomerOrder {
+  if (!value || typeof value !== 'object') return false;
+  const order = value as Record<string, unknown>;
+  const contact = order.contact;
+  return Number.isSafeInteger(order.id)
+    && typeof order.createdAt === 'string'
+    && (typeof order.carId === 'number' || order.carId === null)
+    && typeof order.vehicleName === 'string'
+    && (typeof order.year === 'number' || order.year === null)
+    && (typeof order.imageUrl === 'string' || order.imageUrl === null)
+    && (typeof order.color === 'string' || order.color === null)
+    && Array.isArray(order.selectedOptions)
+    && order.selectedOptions.every(option => typeof option === 'string')
+    && typeof order.totalPrice === 'number'
+    && ['new', 'in_progress', 'completed', 'cancelled'].includes(String(order.status))
+    && (['cash', 'leasing', 'credit'].includes(String(order.paymentMethod)) || order.paymentMethod === null)
+    && typeof contact === 'object'
+    && contact !== null
+    && ['name', 'phone', 'email'].every(field =>
+      typeof (contact as Record<string, unknown>)[field] === 'string'
+      || (contact as Record<string, unknown>)[field] === null,
+    );
+}
+
 export async function fetchUserProfile(): Promise<UserProfile> {
   const token = localStorage.getItem('accessToken');
   if (!token) {

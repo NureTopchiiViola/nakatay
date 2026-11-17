@@ -152,6 +152,58 @@ export async function saveCustomBuild(
   return data;
 }
 
+export async function updateCustomBuild(
+  buildId: number,
+  modelName: string,
+  configuration: Configuration,
+): Promise<SavedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds/${buildId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSavedCustomBuild(data)) {
+    throw new Error('The custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function fetchCustomBuilds(signal?: AbortSignal): Promise<SavedCustomBuild[]> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds`, {
+    signal,
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data) || !data.every(isSavedCustomBuild)) {
+    throw new Error('The custom builds endpoint returned an invalid response.');
+  }
+  return data;
+}
+
 function isSavedCustomBuild(value: unknown): value is SavedCustomBuild {
   if (!value || typeof value !== 'object') return false;
   const build = value as Record<string, unknown>;

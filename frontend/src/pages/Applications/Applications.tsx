@@ -88,13 +88,14 @@ function ApplicationCard({ application, isAdmin }: { application: CustomerOrder;
   );
 }
 
-export function Applications() {
+export function Applications({ headingLevel = 1 }: { headingLevel?: 1 | 2 } = {}) {
   const [applications, setApplications] = useState<CustomerOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const location = useLocation();
   const createdApplicationId = (location.state as { createdApplicationId?: string } | null)?.createdApplicationId;
   const isAdmin = localStorage.getItem('userRole')?.toUpperCase() === 'ADMIN';
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   useEffect(() => {
     const controller = new AbortController();
@@ -115,9 +116,9 @@ export function Applications() {
   }, []);
 
   return (
-    <main className="applications-page">
+    <section className="applications-page">
       <header className="applications-heading">
-        <h1>{isAdmin ? 'Усі заявки клієнтів' : 'Історія та статус заявок'}</h1>
+        <Heading>{isAdmin ? 'Усі заявки клієнтів' : 'Історія та статус заявок'}</Heading>
         <p>{isAdmin
           ? 'Переглядайте заявки клієнтів, їхні контактні дані та статуси.'
           : 'Тут ви можете переглянути статус ваших замовлень та запитів на покупку.'}</p>
@@ -150,6 +151,6 @@ export function Applications() {
           )}
         </section>
       )}
-    </main>
+    </section>
   );
 }

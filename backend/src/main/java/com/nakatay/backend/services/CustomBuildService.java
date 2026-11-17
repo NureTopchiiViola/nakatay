@@ -9,9 +9,12 @@ import com.nakatay.backend.models.SavedCustomBuild;
 import com.nakatay.backend.models.User;
 import com.nakatay.backend.repositories.SavedCustomBuildRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -37,6 +40,28 @@ public class CustomBuildService {
         SavedCustomBuild build = new SavedCustomBuild();
         build.setUser(user);
         build.setModelName(MODEL_NAME);
+        build.setConfigurationData(writeConfiguration(request.configuration()));
+        return toResponse(customBuildRepository.save(build));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SavedCustomBuildResponse> getBuilds(User user) {
+        return customBuildRepository.findAllByUser_IdOrderByCreatedAtDesc(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public SavedCustomBuildResponse updateBuild(
+            User user,
+            Long buildId,
+            SaveCustomBuildRequest request
+    ) {
+        validateRequest(request);
+
+        SavedCustomBuild build = customBuildRepository.findByIdAndUser_Id(buildId, user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Збірку не знайдено"));
         build.setConfigurationData(writeConfiguration(request.configuration()));
         return toResponse(customBuildRepository.save(build));
     }

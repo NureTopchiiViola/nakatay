@@ -3,7 +3,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
 import { CarViewer } from './CarViewer';
-import { saveCustomBuild } from '../../api';
+import { saveCustomBuild, updateCustomBuild } from '../../api';
 import { useAuthModal } from '../../context/useAuthModal';
 import {
   BASE_PRICE, MODEL_NAME, PAINTS, WHEELS, INTERIORS, DECORS, PACKAGES, EXTRAS,
@@ -39,6 +39,7 @@ export function Configurator() {
 
 function ConfiguratorPage({ search }: { search: string }) {
   const [configuration, setConfiguration] = useState<Configuration>(() => configurationFromSearch(search));
+  const buildIdParam = new URLSearchParams(search).get('buildId');
   const navigate = useNavigate();
   const { openAuthModal } = useAuthModal();
   const [tab, setTab] = useState<Tab>('exterior');
@@ -73,11 +74,18 @@ function ConfiguratorPage({ search }: { search: string }) {
   }
   function preserveConfigurationInUrl() {
     const params = new URLSearchParams(configurationToSearch(configuration));
-    const carId = new URLSearchParams(search).get('carId');
+    const currentParams = new URLSearchParams(search);
+    const carId = currentParams.get('carId');
     if (carId) params.set('carId', carId);
+    if (buildIdParam) params.set('buildId', buildIdParam);
     navigate(`/create?${params.toString()}`, { replace: true });
   }
   async function saveBuild() {
+    if (buildIdParam && (!/^\d+$/.test(buildIdParam) || !Number.isSafeInteger(Number(buildIdParam)))) {
+      setNotice('Посилання на збережену збірку некоректне. Відкрийте її з особистого кабінету.');
+      return;
+    }
+
     if (!localStorage.getItem('accessToken')) {
       preserveConfigurationInUrl();
       openAuthModal();
@@ -86,8 +94,10 @@ function ConfiguratorPage({ search }: { search: string }) {
 
     setIsSaving(true);
     try {
-      const savedBuild = await saveCustomBuild(MODEL_NAME, configuration);
-      setNotice(`Збірку збережено у вашому акаунті (№${savedBuild.id}).`);
+      const savedBuild = buildIdParam
+        ? await updateCustomBuild(Number(buildIdParam), MODEL_NAME, configuration)
+        : await saveCustomBuild(MODEL_NAME, configuration);
+      setNotice(`${buildIdParam ? 'Збірку оновлено' : 'Збірку збережено'} у вашому акаунті (№${savedBuild.id}).`);
     } catch (error) {
       console.error('Не вдалося зберегти збірку:', error);
       if (error instanceof Error && error.message === 'Unauthorized') {
@@ -225,7 +235,7 @@ function ConfiguratorPage({ search }: { search: string }) {
           <div className="configurator-checkout-actions">
             <button type="button" onClick={openShare}><MdOutlineShare /> Поділитися</button>
             <button type="button" onClick={saveBuild} disabled={isSaving}>
-              <MdOutlineBookmarkBorder /> {isSaving ? 'Зберігаємо…' : 'Зберегти збірку'}
+              <MdOutlineBookmarkBorder /> {isSaving ? 'Зберігаємо…' : buildIdParam ? 'Зберегти зміни' : 'Зберегти збірку'}
             </button>
             <button type="button" className="configurator-primary" onClick={() => {
               const params = new URLSearchParams(configurationToSearch(configuration));

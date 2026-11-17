@@ -1,14 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface CarComparisonContextType {
-  comparedCarIds: number[];
-  addToComparison: (id: number) => void;
-  removeFromComparison: (id: number) => void;
-  isInComparison: (id: number) => boolean;
-  toggleCompare: (id: number) => void;
-}
-
-const CarComparisonContext = createContext<CarComparisonContextType | undefined>(undefined);
+import React, { useState, useEffect } from 'react';
+import { CarComparisonContext } from './CarComparisonContextValue';
 
 const STORAGE_KEY = 'nakatay_compared_car_ids';
 
@@ -60,12 +51,4 @@ export const CarComparisonProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
     </CarComparisonContext.Provider>
   );
-};
-
-export const useCarComparison = () => {
-  const context = useContext(CarComparisonContext);
-  if (!context) {
-    throw new Error('useCarComparison must be used within a CarComparisonProvider');
-  }
-  return context;
 };

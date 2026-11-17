@@ -1,7 +1,20 @@
+import { useState } from 'react';
 import { MdClose } from 'react-icons/md';
 import { GoogleLogin } from '@react-oauth/google';
-import { getUserProfile } from '../../auth/userProfile';
+import { API_BASE_URL } from '../../api';
 import './AuthModal.css';
+
+interface AuthResponse {
+  accessToken: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
+    role: string;
+  };
+}
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -9,38 +22,52 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  const [authError, setAuthError] = useState('');
   if (!isOpen) return null;
 
-const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
-  const googleToken = credentialResponse.credential;
-  if (!googleToken) return;
-  
-  try {
-    const response = await fetch('http://localhost:8081/api/auth/google', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token: googleToken }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      
-      window.localStorage.setItem('accessToken', data.accessToken);
-      window.localStorage.setItem('userProfile', JSON.stringify(getUserProfile(googleToken)));
-      
-      console.log('auth success');
-      onClose();
-      
-      window.location.reload(); 
-    } else {
-      console.error('bad response from server:', response.status, await response.text());
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
+    const googleToken = credentialResponse.credential;
+    if (!googleToken) {
+      setAuthError('Google не повернув токен авторизації. Спробуйте ще раз.');
+      return;
     }
-  } catch (error) {
-    console.error('Error occurred while fetching auth data:', error);
-  }
-};
+    
+    try {
+      setAuthError('');
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken: googleToken }),
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(`Сервер відхилив вхід (${response.status}). ${details}`);
+      }
+
+      const data = await response.json() as AuthResponse;
+      if (!data.accessToken || !data.user) {
+        throw new Error('Сервер повернув неповні дані авторизації.');
+      }
+
+      window.localStorage.setItem('accessToken', data.accessToken);
+      window.localStorage.setItem('userRole', data.user.role);
+      window.localStorage.setItem('userId', String(data.user.id));
+      window.localStorage.setItem('userProfile', JSON.stringify({
+        name: [data.user.firstName, data.user.lastName].filter(Boolean).join(' '),
+        email: data.user.email,
+        phone: data.user.phone ?? '',
+      }));
+
+      onClose();
+      window.location.reload();
+    } catch (error) {
+      console.error('Не вдалося увійти через Google:', error);
+      setAuthError(error instanceof Error ? error.message : 'Не вдалося виконати вхід. Спробуйте ще раз.');
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -51,12 +78,13 @@ const handleGoogleSuccess = async (credentialResponse: { credential?: string }) 
         
         <h2>Увійти в кабінет</h2>
         <p>Увійдіть, щоб зберігати конфігурації та відстежувати заявки.</p>
+        {authError && <p className="auth-error" role="alert">{authError}</p>}
         
         <div className="google-btn-wrapper">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => {
-              console.error('Помилка авторизації Google');
+              setAuthError('Помилка авторизації Google. Перевірте налаштування OAuth-клієнта.');
             }}
             theme="outline"
             shape="rectangular"

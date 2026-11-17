@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MdArrowBack, MdArrowForward, MdFilterList, MdOutlineSearch } from 'react-icons/md';
-import { API_BASE_URL } from '../../api';
+import { API_BASE_URL, getCarImageUrl } from '../../api';
 import catalogUnavailableIcon from '../../assets/car-settings.svg';
 import { VehicleCard } from '../../components/catalog/VehicleCard';
 import type { VehicleCardProps } from '../../components/catalog/VehicleCard';
@@ -131,7 +131,7 @@ export function Catalog() {
         const data = await response.json() as CatalogResponse;
         setCars(data.content.map((car) => ({
           id: car.trimId,
-          imageSrc: car.imageUrl ?? '',
+          imageSrc: getCarImageUrl(car.imageUrl),
           title: car.title,
           year: car.year,
           engine: car.engine,

@@ -50,6 +50,12 @@
   font-size: 0.95rem;
 }
 
+.modal-content .auth-error {
+  color: #e6a18f;
+  font-size: 0.85rem;
+  margin: 0 0 1.25rem;
+}
+
 .google-btn-wrapper {
   display: flex;
   justify-content: center;

@@ -6,36 +6,69 @@ import { Catalog } from './pages/Catalog/Catalog';
 import { CarComparison } from './pages/CarComparison/CarComparison';
 import { CarDetails } from './pages/CarDetails/CarDetails';
 import { Configurator } from './pages/Configurator/Configurator';
+import { Checkout } from './pages/Checkout/Checkout';
 import { NotFound } from './pages/NotFound/NotFound';
 import { CarComparisonProvider } from './context/CarComparisonContext';
-import { Checkout } from './pages/Checkout/Checkout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Profile } from './pages/Profile/Profile';
+import { Favorites } from './pages/Favorites/Favorites';
+import { FavoritesProvider } from './context/FavoritesContext';
+import { AuthModalProvider } from './context/AuthModalProvider';
+import { Applications } from './pages/Applications/Applications';
 
 export default function App() {
   return (
-    <CarComparisonProvider>
-      <Router>
-        <div className="app-layout">
-          <Header />
-        
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Catalog />} />
+    <AuthModalProvider>
+      <FavoritesProvider>
+        <CarComparisonProvider>
+          <Router>
+            <div className="app-layout">
+              <Header />
+            
+              <main className="main-content">
+                <Routes>
+                  <Route path="/" element={<Catalog />} />
+                  <Route path="/cars/:id" element={<CarDetails />} />
+                  <Route path="/compare" element={<CarComparison />} />
+                  <Route path="/create" element={<Configurator />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order/:id" element={<Checkout />} />
+                  <Route
+                    path="/orders"
+                    element={<ProtectedRoute><Applications /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/favorites"
+                    element={<ProtectedRoute><Favorites /></ProtectedRoute>}
+                  />
 
-            {/* dynamic URL для конкретного авто (id) */}
-            <Route path="/cars/:id" element={<CarDetails />} />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } 
+                  />
 
-            {/*  порівняння */}
-            <Route path="/compare" element={<CarComparison />} />
-            <Route path="/create" element={<Configurator />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order/:id" element={<Checkout />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute requiredRole="Moderator">
+                        <div style={{ padding: '40px' }}><h1>Панель керування</h1></div>
+                      </ProtectedRoute>
+                    } 
+                  />
 
-        <Footer />
-      </div>
-    </Router>
-    </CarComparisonProvider>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+
+              <Footer />
+            </div>
+          </Router>
+        </CarComparisonProvider>
+      </FavoritesProvider>
+    </AuthModalProvider>
   );
 }

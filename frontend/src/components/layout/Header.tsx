@@ -11,7 +11,7 @@ export function Header() {
 
   const isAuthenticated = !!localStorage.getItem('accessToken');
   const userRole = localStorage.getItem('userRole');
-  const isAdminOrModerator = userRole === 'Admin' || userRole === 'Moderator';
+  const isAdmin = userRole?.toUpperCase() === 'ADMIN';
 
   const handleUserIconClick = () => {
     if (isAuthenticated) {
@@ -49,7 +49,7 @@ export function Header() {
           <NavLink to="/compare" className={({ isActive }) => isActive ? 'active' : undefined}>
             Порівняти
           </NavLink>
-          {isAuthenticated && isAdminOrModerator && (
+          {isAuthenticated && isAdmin && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : undefined} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <MdAdminPanelSettings size={18} />
               Панель керування

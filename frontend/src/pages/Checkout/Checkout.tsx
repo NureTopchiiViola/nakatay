@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { API_BASE_URL, getCarImageUrls } from '../../api';
+import { API_BASE_URL, createOrder, getCarImageUrls } from '../../api';
+import type { OrderPaymentMethod } from '../../api';
 import { getUserProfile } from '../../auth/userProfile';
 import type { UserProfile } from '../../auth/userProfile';
-import { createMockApplication } from '../../mocks/applications';
+import { useAuthModal } from '../../context/useAuthModal';
 import type { CarDetailsData } from '../../types/Car';
 import {
   configurationFromSearch,
@@ -16,7 +17,6 @@ import {
 import './Checkout.css';
 
 type ContactField = keyof UserProfile;
-type PaymentMethod = 'cash' | 'leasing' | 'credit';
 
 const FIELD_LABELS: Record<ContactField, string> = {
   name: "Ім'я та прізвище",
@@ -62,15 +62,17 @@ function validateContact(field: ContactField, value: string): string {
 
 export function Checkout() {
   const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
   const { id: routeCarId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const carId = routeCarId ?? searchParams.get('carId');
   const [contact, setContact] = useState<UserProfile>(readProfile);
   const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<OrderPaymentMethod>('cash');
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [consentError, setConsentError] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [car, setCar] = useState<CarDetailsData | null>(null);
   const [carError, setCarError] = useState('');
 
@@ -109,7 +111,7 @@ export function Checkout() {
     setSubmitMessage('');
   }
 
-  function submitApplication(event: FormEvent<HTMLFormElement>) {
+  async function submitApplication(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = Object.fromEntries(
       (Object.keys(FIELD_LABELS) as ContactField[]).map(field => [field, validateContact(field, contact[field])]),
@@ -124,8 +126,15 @@ export function Checkout() {
       return;
     }
 
+    if (!localStorage.getItem('accessToken')) {
+      setSubmitMessage('Щоб надіслати заявку, увійдіть у свій акаунт.');
+      openAuthModal();
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const application = createMockApplication({
+      const application = await createOrder({
         carId: car?.id ?? null,
         vehicleName: carName,
         year: car?.year ?? null,
@@ -136,16 +145,21 @@ export function Checkout() {
           : [],
         totalPrice: total,
         paymentMethod,
-        contact,
+        contactName: contact.name.trim(),
+        contactPhone: contact.phone.trim(),
+        contactEmail: contact.email.trim(),
       });
-      if (localStorage.getItem('accessToken')) {
-        navigate('/orders', { state: { createdApplicationId: application.id } });
-      } else {
-        setSubmitMessage('Заявку збережено. Історія заявок доступна після входу через профіль користувача.');
-      }
+      navigate('/orders', { state: { createdApplicationId: String(application.id) } });
     } catch (error) {
-      console.error('Не вдалося зберегти демонстраційну заявку:', error);
-      setSubmitMessage('Не вдалося зберегти заявку в цьому браузері. Перевірте доступ до локального сховища.');
+      console.error('Не вдалося надіслати заявку:', error);
+      if (error instanceof Error && error.message === 'Unauthorized') {
+        setSubmitMessage('Сесія завершилася. Увійдіть у свій акаунт і надішліть заявку ще раз.');
+        openAuthModal();
+      } else {
+        setSubmitMessage('Не вдалося надіслати заявку. Спробуйте ще раз пізніше.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -220,8 +234,8 @@ export function Checkout() {
             </div>
 
             {submitMessage && <p className="checkout-message" role="status">{submitMessage}</p>}
-            <button type="submit" className="checkout-primary checkout-submit">
-              Підтвердити та надіслати заявку
+            <button type="submit" className="checkout-primary checkout-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Надсилаємо заявку…' : 'Підтвердити та надіслати заявку'}
             </button>
           </form>
 

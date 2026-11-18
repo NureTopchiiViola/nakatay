@@ -212,6 +212,23 @@ export async function fetchCustomBuilds(signal?: AbortSignal): Promise<SavedCust
   return data;
 }
 
+export async function deleteCustomBuild(buildId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds/${buildId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build delete failed: ${response.status}`);
+  }
+}
+
 export async function createPublicCustomBuildShare(
   modelName: string,
   configuration: Configuration,

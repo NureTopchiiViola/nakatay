@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -62,5 +63,14 @@ public class CustomBuildController {
             @AuthenticationPrincipal User currentUser
     ) {
         return customBuildService.updateBuild(currentUser, buildId, request);
+    }
+
+    @DeleteMapping("/{buildId}")
+    public ResponseEntity<Void> deleteBuild(
+            @PathVariable Long buildId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        customBuildService.deleteBuild(currentUser, buildId);
+        return ResponseEntity.noContent().build();
     }
 }

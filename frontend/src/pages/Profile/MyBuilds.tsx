@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdContentCopy, MdDirectionsCarFilled, MdOutlineShare } from 'react-icons/md';
-import { createPublicCustomBuildShare, fetchCustomBuilds } from '../../api';
+import { MdClose, MdContentCopy, MdDirectionsCarFilled, MdOutlineShare } from 'react-icons/md';
+import {
+  API_BASE_URL,
+  createPublicCustomBuildShare,
+  deleteCustomBuild,
+  fetchCustomBuilds,
+  getCarImageUrls,
+} from '../../api';
 import type { SavedCustomBuild, SharedCustomBuild } from '../../api';
 import {
   EXTRAS,
@@ -25,7 +31,15 @@ function getBuildSearch(build: SavedCustomBuild, includeBuildId = false): string
   return params.toString();
 }
 
-function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
+function SavedBuildCard({
+  build,
+  imageUrl,
+  onDelete,
+}: {
+  build: SavedCustomBuild;
+  imageUrl: string;
+  onDelete: (id: number) => void;
+}) {
   const selected = getSelections(build.configuration);
   const quote = getQuote(build.configuration);
   const extras = EXTRAS.filter(extra => build.configuration.extras.includes(extra.id));
@@ -33,6 +47,8 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
   const [isSharing, setIsSharing] = useState(false);
   const [shareError, setShareError] = useState('');
   const [shareNotice, setShareNotice] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const shareUrl = sharedBuild ? new URL(sharedBuild.url, window.location.origin).toString() : '';
 
   async function shareBuild() {
@@ -49,6 +65,25 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm('Видалити цю збережену збірку?')) return;
+
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      await deleteCustomBuild(build.id);
+      onDelete(build.id);
+    } catch (error) {
+      console.error('Не вдалося видалити збірку:', error);
+      setDeleteError(
+        error instanceof Error && error.message === 'Unauthorized'
+          ? 'Сесія завершилася. Увійдіть у свій акаунт ще раз.'
+          : 'Не вдалося видалити збірку. Спробуйте ще раз.'
+      );
+      setIsDeleting(false);
+    }
+  }
+
   async function copyShareValue(value: string, label: string) {
     try {
       await navigator.clipboard.writeText(value);
@@ -60,9 +95,26 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
 
   return (
     <article className="saved-build-card">
-      <div className="saved-build-image" aria-hidden="true">
-        <MdDirectionsCarFilled />
-        <span>BMW E46</span>
+      <button
+        type="button"
+        className="saved-build-delete"
+        onClick={() => void handleDelete()}
+        disabled={isDeleting}
+        aria-label="Видалити збірку"
+        title="Видалити збірку"
+      >
+        <MdClose size={18} />
+      </button>
+
+      <div className="saved-build-image">
+        {imageUrl ? (
+          <img src={imageUrl} alt={build.modelName} />
+        ) : (
+          <>
+            <MdDirectionsCarFilled aria-hidden="true" />
+            <span>BMW E46</span>
+          </>
+        )}
       </div>
 
       <div className="saved-build-content">
@@ -100,8 +152,11 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
             {isSharing ? 'Створюємо посилання…' : sharedBuild ? 'Створити нове посилання' : 'Поділитися'}
           </button>
         </div>
+
         {isSharing && <p className="saved-build-share-status" role="status">Створюємо публічне посилання…</p>}
         {shareError && <p className="saved-build-share-error" role="alert">{shareError}</p>}
+        {deleteError && <p className="saved-build-share-error" role="alert">{deleteError}</p>}
+
         {sharedBuild && (
           <div className="saved-build-share" aria-label="Публічне посилання на збірку">
             <p>Публічне посилання готове. Його можна надіслати іншим.</p>
@@ -139,11 +194,13 @@ function SavedBuildCard({ build }: { build: SavedCustomBuild }) {
 
 export function MyBuilds() {
   const [builds, setBuilds] = useState<SavedCustomBuild[]>([]);
+  const [carImageUrl, setCarImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
+
     fetchCustomBuilds(controller.signal)
       .then(setBuilds)
       .catch(loadError => {
@@ -156,6 +213,19 @@ export function MyBuilds() {
       .finally(() => {
         if (!controller.signal.aborted) setIsLoading(false);
       });
+
+    fetch(`${API_BASE_URL}/api/cars`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then(res => (res.ok ? res.json() : []))
+      .then((cars: Array<{ modelName: string; galleryUrls?: string[] }>) => {
+        if (controller.signal.aborted) return;
+        const e46 = cars.find(c => c.modelName.toLowerCase().includes('e46')) ?? cars[0];
+        const urls = getCarImageUrls(e46?.galleryUrls ?? []);
+        if (urls[0]) setCarImageUrl(urls[0]);
+      })
+      .catch(() => {});
 
     return () => controller.abort();
   }, []);
@@ -173,7 +243,14 @@ export function MyBuilds() {
         <p className="my-builds-state my-builds-error" role="alert">{error}</p>
       ) : builds.length > 0 ? (
         <div className="saved-builds-list">
-          {builds.map(build => <SavedBuildCard build={build} key={build.id} />)}
+          {builds.map(build => (
+            <SavedBuildCard
+              build={build}
+              key={build.id}
+              imageUrl={carImageUrl}
+              onDelete={deletedId => setBuilds(current => current.filter(item => item.id !== deletedId))}
+            />
+          ))}
         </div>
       ) : (
         <div className="my-builds-state">

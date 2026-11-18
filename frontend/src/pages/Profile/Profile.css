@@ -16,8 +16,8 @@
   border-bottom: 1px solid var(--color-border);
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 0.5rem;
+  justify-content: center;
   margin-bottom: 1.5rem;
 }
 
@@ -59,11 +59,11 @@
   border-radius: 4px;
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
   max-width: 460px;
   padding: 2.5rem 2rem;
   text-align: center;
   width: 100%;
-  margin: 0 auto;
 }
 
 .profile-avatar {
@@ -176,6 +176,30 @@
   margin: 0;
 }
 
+.my-builds-state {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 1.25rem;
+}
+
+.my-builds-state h3 {
+  margin: 0 0 0.5rem;
+}
+
+.my-builds-state p {
+  color: var(--color-text-secondary);
+}
+
+.my-builds-state a {
+  color: var(--color-text-primary);
+  text-underline-offset: 0.25em;
+}
+
+.my-builds-error,
+.saved-build-share-error {
+  border-left: 3px solid var(--color-danger);
+}
+
 .saved-builds-list {
   display: grid;
   gap: 1.25rem;
@@ -187,6 +211,7 @@
   gap: 1.5rem;
   grid-template-columns: minmax(15rem, 0.85fr) minmax(0, 1.15fr);
   padding: 1rem;
+  position: relative;
 }
 
 .saved-build-image {
@@ -199,6 +224,13 @@
   justify-content: center;
   min-height: 12rem;
   overflow: hidden;
+}
+
+.saved-build-image img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .saved-build-image svg {
@@ -224,6 +256,7 @@
   gap: 1rem;
   justify-content: space-between;
   padding-bottom: 1rem;
+  padding-right: 2.25rem;
 }
 
 .saved-build-heading h2 {
@@ -257,14 +290,17 @@
   justify-content: space-between;
 }
 
+.saved-build-options dt,
+.saved-build-options dd {
+  font-size: 0.78rem;
+}
+
 .saved-build-options dt {
   color: var(--color-text-secondary);
-  font-size: 0.78rem;
 }
 
 .saved-build-options dd {
   color: var(--color-text-primary);
-  font-size: 0.78rem;
   margin: 0;
   text-align: right;
 }
@@ -278,22 +314,23 @@
 }
 
 .saved-build-actions a,
-.saved-build-actions button {
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
-  font-size: 0.8rem;
-  padding: 0.7rem 0.9rem;
-  text-align: center;
-  text-decoration: none;
-}
-
-.saved-build-actions button {
+.saved-build-actions button,
+.saved-build-share-field button {
   align-items: center;
   background: transparent;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
   cursor: pointer;
   display: inline-flex;
   gap: 0.4rem;
   justify-content: center;
+  text-decoration: none;
+}
+
+.saved-build-actions a,
+.saved-build-actions button {
+  font-size: 0.8rem;
+  padding: 0.7rem 0.9rem;
 }
 
 .saved-build-actions button:disabled {
@@ -302,7 +339,8 @@
 }
 
 .saved-build-actions a:hover,
-.saved-build-actions button:hover:not(:disabled) {
+.saved-build-actions button:hover:not(:disabled),
+.saved-build-share-field button:hover {
   background: var(--color-surface-raised);
 }
 
@@ -318,9 +356,19 @@
 }
 
 .saved-build-share p,
+.saved-build-share-status,
+.saved-build-share-error {
+  font-size: 0.82rem;
+}
+
+.saved-build-share p,
 .saved-build-share-status {
   color: var(--color-text-secondary);
-  font-size: 0.82rem;
+}
+
+.saved-build-share-error {
+  color: var(--color-danger);
+  padding-left: 0.65rem;
 }
 
 .saved-build-share label {
@@ -347,50 +395,117 @@
 }
 
 .saved-build-share-field button {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-primary);
-  cursor: pointer;
-  display: inline-flex;
   font-size: 0.75rem;
   gap: 0.35rem;
-  justify-content: center;
   padding: 0.6rem 0.75rem;
 }
 
-.saved-build-share-field button:hover {
+.saved-build-delete,
+.build-delete-dialog-close {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0.9rem;
+  top: 0.9rem;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  width: 2rem;
+}
+
+.saved-build-delete:hover:not(:disabled),
+.build-delete-dialog-close:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.build-delete-dialog {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
+  color: var(--color-text-primary);
+  max-width: 440px;
+  padding: 0;
+  width: calc(100% - 2rem);
+}
+
+.build-delete-dialog::backdrop {
+  backdrop-filter: blur(3px);
+  background: rgba(12, 12, 12, 0.78);
+}
+
+.build-delete-dialog-content {
+  padding: 1.75rem;
+  position: relative;
+}
+
+.build-delete-dialog-content h3 {
+  color: var(--color-text-primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.build-delete-dialog-content p {
+  color: var(--color-text-secondary);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.build-delete-dialog-content strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.build-delete-dialog-actions {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.build-delete-cancel,
+.build-delete-confirm {
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.build-delete-cancel {
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.build-delete-cancel:hover:not(:disabled) {
   background: var(--color-surface-raised);
 }
 
-.saved-build-share-error {
-  border-left: 3px solid #e6a18f;
-  color: var(--color-danger);
-  font-size: 0.82rem;
-  padding-left: 0.65rem;
+.build-delete-confirm {
+  background: var(--color-text-primary);
+  border: 1px solid var(--color-text-primary);
+  color: var(--color-background);
 }
 
-.my-builds-state {
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  padding: 1.25rem;
+.build-delete-confirm:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
-.my-builds-state h3 {
-  margin: 0 0 0.5rem;
-}
-
-.my-builds-state p {
-  color: var(--color-text-secondary);
-}
-
-.my-builds-state a {
-  color: var(--color-text-primary);
-  text-underline-offset: 0.25em;
-}
-
-.my-builds-error {
-  border-left: 3px solid #e6a18f;
+.saved-build-delete:disabled,
+.build-delete-dialog-close:disabled,
+.build-delete-cancel:disabled,
+.build-delete-confirm:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 @media (max-width: 680px) {
@@ -405,90 +520,4 @@
   .saved-build-heading {
     flex-direction: column;
   }
-}
-
-.saved-build-card {
-  position: relative;
-}
-
-.saved-build-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.saved-build-heading {
-  padding-right: 36px;
-}
-
-.saved-build-delete {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #9e9b95;
-  cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.saved-build-delete:hover:not(:disabled) {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #4a4845;
-}
-
-.saved-build-delete:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}.saved-build-card {
-  position: relative;
-}
-
-.saved-build-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.saved-build-heading {
-  padding-right: 36px;
-}
-
-.saved-build-delete {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #9e9b95;
-  cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.saved-build-delete:hover:not(:disabled) {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #4a4845;
-}
-
-.saved-build-delete:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }

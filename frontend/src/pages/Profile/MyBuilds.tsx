@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MdClose, MdContentCopy, MdDirectionsCarFilled, MdOutlineShare } from 'react-icons/md';
 import {
@@ -34,11 +34,11 @@ function getBuildSearch(build: SavedCustomBuild, includeBuildId = false): string
 function SavedBuildCard({
   build,
   imageUrl,
-  onDelete,
+  onRequestDelete,
 }: {
   build: SavedCustomBuild;
   imageUrl: string;
-  onDelete: (id: number) => void;
+  onRequestDelete: (build: SavedCustomBuild) => void;
 }) {
   const selected = getSelections(build.configuration);
   const quote = getQuote(build.configuration);
@@ -47,8 +47,6 @@ function SavedBuildCard({
   const [isSharing, setIsSharing] = useState(false);
   const [shareError, setShareError] = useState('');
   const [shareNotice, setShareNotice] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
   const shareUrl = sharedBuild ? new URL(sharedBuild.url, window.location.origin).toString() : '';
 
   async function shareBuild() {
@@ -62,25 +60,6 @@ function SavedBuildCard({
       setShareError('Не вдалося створити посилання. Перевірте з’єднання та спробуйте ще раз.');
     } finally {
       setIsSharing(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!window.confirm('Видалити цю збережену збірку?')) return;
-
-    setIsDeleting(true);
-    setDeleteError('');
-    try {
-      await deleteCustomBuild(build.id);
-      onDelete(build.id);
-    } catch (error) {
-      console.error('Не вдалося видалити збірку:', error);
-      setDeleteError(
-        error instanceof Error && error.message === 'Unauthorized'
-          ? 'Сесія завершилася. Увійдіть у свій акаунт ще раз.'
-          : 'Не вдалося видалити збірку. Спробуйте ще раз.'
-      );
-      setIsDeleting(false);
     }
   }
 
@@ -98,8 +77,7 @@ function SavedBuildCard({
       <button
         type="button"
         className="saved-build-delete"
-        onClick={() => void handleDelete()}
-        disabled={isDeleting}
+        onClick={() => onRequestDelete(build)}
         aria-label="Видалити збірку"
         title="Видалити збірку"
       >
@@ -155,7 +133,6 @@ function SavedBuildCard({
 
         {isSharing && <p className="saved-build-share-status" role="status">Створюємо публічне посилання…</p>}
         {shareError && <p className="saved-build-share-error" role="alert">{shareError}</p>}
-        {deleteError && <p className="saved-build-share-error" role="alert">{deleteError}</p>}
 
         {sharedBuild && (
           <div className="saved-build-share" aria-label="Публічне посилання на збірку">
@@ -198,6 +175,21 @@ export function MyBuilds() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [buildToDelete, setBuildToDelete] = useState<SavedCustomBuild | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const deleteDialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current;
+    if (!dialog) return;
+    if (buildToDelete) {
+      if (!dialog.open) dialog.showModal();
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [buildToDelete]);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -230,6 +222,38 @@ export function MyBuilds() {
     return () => controller.abort();
   }, []);
 
+  function openDeleteModal(build: SavedCustomBuild) {
+    setDeleteError('');
+    setBuildToDelete(build);
+  }
+
+  function closeDeleteModal() {
+    if (isDeleting) return;
+    setBuildToDelete(null);
+    setDeleteError('');
+  }
+
+  async function confirmDelete() {
+    if (!buildToDelete) return;
+
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      await deleteCustomBuild(buildToDelete.id);
+      setBuilds(current => current.filter(item => item.id !== buildToDelete.id));
+      setBuildToDelete(null);
+    } catch (err) {
+      console.error('Не вдалося видалити збірку:', err);
+      setDeleteError(
+        err instanceof Error && err.message === 'Unauthorized'
+          ? 'Сесія завершилася. Увійдіть у свій акаунт ще раз.'
+          : 'Не вдалося видалити збірку. Спробуйте ще раз.'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <section className="my-builds-page" aria-labelledby="my-builds-heading">
       <header className="my-builds-heading">
@@ -248,7 +272,7 @@ export function MyBuilds() {
               build={build}
               key={build.id}
               imageUrl={carImageUrl}
-              onDelete={deletedId => setBuilds(current => current.filter(item => item.id !== deletedId))}
+              onRequestDelete={openDeleteModal}
             />
           ))}
         </div>
@@ -259,6 +283,64 @@ export function MyBuilds() {
           <Link to="/create">Перейти до конфігуратора</Link>
         </div>
       )}
+
+      <dialog
+        ref={deleteDialogRef}
+        className="build-delete-dialog"
+        aria-labelledby="build-delete-title"
+        onCancel={event => {
+          event.preventDefault();
+          closeDeleteModal();
+        }}
+        onClick={event => {
+          if (event.target === deleteDialogRef.current) closeDeleteModal();
+        }}
+      >
+        {buildToDelete && (
+          <div className="build-delete-dialog-content">
+            <button
+              type="button"
+              className="build-delete-dialog-close"
+              onClick={closeDeleteModal}
+              disabled={isDeleting}
+              aria-label="Закрити"
+            >
+              <MdClose size={20} />
+            </button>
+
+            <span className="saved-build-eyebrow">ПІДТВЕРДЖЕННЯ ДІЇ</span>
+            <h3 id="build-delete-title">Видалити збірку?</h3>
+            <p>
+              Ви дійсно хочете видалити конфігурацію{' '}
+              <strong>{buildToDelete.modelName}</strong> (від {formatDate(buildToDelete.createdAt)})?
+              Цю дію неможливо скасувати.
+            </p>
+
+            {deleteError && (
+              <p className="saved-build-share-error" role="alert">{deleteError}</p>
+            )}
+
+            <div className="build-delete-dialog-actions">
+              <button
+                type="button"
+                className="build-delete-cancel"
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                className="build-delete-confirm"
+                onClick={() => void confirmDelete()}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Видаляємо…' : 'Видалити збірку'}
+              </button>
+            </div>
+          </div>
+        )}
+      </dialog>
     </section>
   );
 }

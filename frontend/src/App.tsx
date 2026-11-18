@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
@@ -35,7 +35,7 @@ export default function App() {
                   <Route path="/order/:id" element={<Checkout />} />
                   <Route
                     path="/orders"
-                    element={<ProtectedRoute><Applications /></ProtectedRoute>}
+                    element={<Navigate to="/profile?tab=orders" replace />}
                   />
                   <Route
                     path="/favorites"

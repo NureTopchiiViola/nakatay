@@ -1,9 +1,55 @@
 .profile-container {
-  align-items: center;
-  display: flex;
-  justify-content: center;
+  margin: 0 auto;
+  max-width: 90rem;
   min-height: calc(100vh - 12rem);
   padding: 3rem clamp(1.25rem, 5.5vw, 5.5rem);
+}
+
+.profile-title {
+  color: var(--color-text-primary);
+  font-family: var(--font-heading);
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+  margin: 0 0 1.5rem;
+}
+
+.profile-tabs {
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-tab {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+  padding: 0.9rem 1rem;
+}
+
+.profile-tab:hover,
+.profile-tab.is-active {
+  color: var(--color-text-primary);
+}
+
+.profile-tab.is-active {
+  border-bottom-color: var(--color-text-primary);
+}
+
+.profile-tab:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: -2px;
+}
+
+.profile-tab-panel .applications-page {
+  max-width: none;
+  min-height: 0;
+  padding: 0;
 }
 
 .profile-card {
@@ -17,6 +63,7 @@
   padding: 2.5rem 2rem;
   text-align: center;
   width: 100%;
+  margin: 0 auto;
 }
 
 .profile-avatar {
@@ -106,4 +153,256 @@
   color: var(--color-danger);
   font-size: 1rem;
   font-weight: 500;
+}
+
+.my-builds-page {
+  min-height: 50vh;
+}
+
+.my-builds-heading {
+  margin-bottom: 1.5rem;
+}
+
+.my-builds-heading h2 {
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
+.my-builds-heading p,
+.saved-build-heading p {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.saved-builds-list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.saved-build-card {
+  background: var(--color-surface);
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(15rem, 0.85fr) minmax(0, 1.15fr);
+  padding: 1rem;
+}
+
+.saved-build-image {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background: radial-gradient(ellipse at center, #515453 0, #292b2b 68%, #1b1d1d 100%);
+  color: #d7d4cf;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 12rem;
+  overflow: hidden;
+}
+
+.saved-build-image svg {
+  height: clamp(5rem, 12vw, 9rem);
+  width: clamp(5rem, 12vw, 9rem);
+}
+
+.saved-build-image span {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+}
+
+.saved-build-content {
+  align-self: center;
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+.saved-build-heading {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+
+.saved-build-heading h2 {
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+  margin: 0.35rem 0;
+}
+
+.saved-build-eyebrow {
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.saved-build-heading > strong {
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.saved-build-options {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 1rem 0;
+}
+
+.saved-build-options > div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.saved-build-options dt {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.saved-build-options dd {
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  margin: 0;
+  text-align: right;
+}
+
+.saved-build-actions {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+}
+
+.saved-build-actions a,
+.saved-build-actions button {
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.saved-build-actions button {
+  align-items: center;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.saved-build-actions button:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.saved-build-actions a:hover,
+.saved-build-actions button:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+}
+
+.saved-build-actions .saved-build-order {
+  background: var(--color-text-primary);
+  color: var(--color-background);
+}
+
+.saved-build-share {
+  border-top: 1px solid var(--color-border);
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+.saved-build-share p,
+.saved-build-share-status {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.saved-build-share label {
+  color: var(--color-text-secondary);
+  display: block;
+  font-size: 0.75rem;
+  margin: 0.9rem 0 0.35rem;
+}
+
+.saved-build-share-field {
+  align-items: stretch;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.saved-build-share-field input {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  min-width: 0;
+  padding: 0.65rem;
+  width: 100%;
+}
+
+.saved-build-share-field button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.75rem;
+  gap: 0.35rem;
+  justify-content: center;
+  padding: 0.6rem 0.75rem;
+}
+
+.saved-build-share-field button:hover {
+  background: var(--color-surface-raised);
+}
+
+.saved-build-share-error {
+  border-left: 3px solid #e6a18f;
+  color: var(--color-danger);
+  font-size: 0.82rem;
+  padding-left: 0.65rem;
+}
+
+.my-builds-state {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 1.25rem;
+}
+
+.my-builds-state h3 {
+  margin: 0 0 0.5rem;
+}
+
+.my-builds-state p {
+  color: var(--color-text-secondary);
+}
+
+.my-builds-state a {
+  color: var(--color-text-primary);
+  text-underline-offset: 0.25em;
+}
+
+.my-builds-error {
+  border-left: 3px solid #e6a18f;
+}
+
+@media (max-width: 680px) {
+  .saved-build-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .saved-build-image {
+    min-height: 10rem;
+  }
+
+  .saved-build-heading {
+    flex-direction: column;
+  }
 }

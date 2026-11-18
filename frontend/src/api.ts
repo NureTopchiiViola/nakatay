@@ -1,3 +1,5 @@
+import type { Configuration } from './pages/Configurator/configuration';
+
 export const API_BASE_URL = 'https://nakatay-backend-api-a91c65d785b6.herokuapp.com';
 
 export interface FavoriteCar {
@@ -115,6 +117,183 @@ export function removeFavoriteCar(userId: string, trimId: number): Promise<void>
   return requestFavoriteCars(userId, trimId, 'DELETE');
 }
 
+export interface SavedCustomBuild {
+  id: number;
+  modelName: string;
+  configuration: Configuration;
+  createdAt: string;
+}
+
+export interface SharedCustomBuild {
+  shareCode: string;
+  url: string;
+  modelName: string;
+  configuration: Configuration;
+  createdAt: string;
+}
+
+export async function saveCustomBuild(
+  modelName: string,
+  configuration: Configuration,
+): Promise<SavedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSavedCustomBuild(data)) {
+    throw new Error('The custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function updateCustomBuild(
+  buildId: number,
+  modelName: string,
+  configuration: Configuration,
+): Promise<SavedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds/${buildId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSavedCustomBuild(data)) {
+    throw new Error('The custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function fetchCustomBuilds(signal?: AbortSignal): Promise<SavedCustomBuild[]> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds`, {
+    signal,
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!Array.isArray(data) || !data.every(isSavedCustomBuild)) {
+    throw new Error('The custom builds endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function createPublicCustomBuildShare(
+  modelName: string,
+  configuration: Configuration,
+  signal?: AbortSignal,
+): Promise<SharedCustomBuild> {
+  const response = await fetch(`${API_BASE_URL}/api/configurator/custom-builds/share`, {
+    method: 'POST',
+    signal,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ modelName, configuration }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Public custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSharedCustomBuild(data)) {
+    throw new Error('The public custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+export async function fetchPublicCustomBuildShare(
+  shareCode: string,
+  signal?: AbortSignal,
+): Promise<SharedCustomBuild> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/configurator/custom-builds/share/${encodeURIComponent(shareCode)}`,
+    {
+      signal,
+      headers: { Accept: 'application/json' },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Public custom build request failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isSharedCustomBuild(data)) {
+    throw new Error('The public custom build endpoint returned an invalid response.');
+  }
+  return data;
+}
+
+function isSavedCustomBuild(value: unknown): value is SavedCustomBuild {
+  if (!value || typeof value !== 'object') return false;
+  const build = value as Record<string, unknown>;
+  return Number.isSafeInteger(build.id)
+    && typeof build.modelName === 'string'
+    && typeof build.createdAt === 'string'
+    && isConfiguration(build.configuration);
+}
+
+function isSharedCustomBuild(value: unknown): value is SharedCustomBuild {
+  if (!value || typeof value !== 'object') return false;
+  const build = value as Record<string, unknown>;
+  return typeof build.shareCode === 'string'
+    && build.shareCode.length > 0
+    && typeof build.url === 'string'
+    && build.url.startsWith('/create?shareCode=')
+    && typeof build.modelName === 'string'
+    && typeof build.createdAt === 'string'
+    && isConfiguration(build.configuration);
+}
+
+function isConfiguration(value: unknown): value is Configuration {
+  if (!value || typeof value !== 'object') return false;
+  const configuration = value as Record<string, unknown>;
+  return ['graphite', 'titanium', 'sapphire', 'crimson', 'obsidian'].includes(String(configuration.paint))
+    && ['alloy', 'forged', 'carbon'].includes(String(configuration.wheels))
+    && ['black', 'cognac', 'ivory'].includes(String(configuration.interior))
+    && ['carbon', 'wood'].includes(String(configuration.decor))
+    && ['standard', 'comfort', 'sport'].includes(String(configuration.package))
+    && Array.isArray(configuration.extras)
+    && configuration.extras.every(extra => ['spoiler', 'matrix', 'night', 'recorder'].includes(String(extra)));
+}
+
 function isFavoriteCarResponse(value: unknown): value is FavoriteCarResponse {
   if (!value || typeof value !== 'object') return false;
   const car = value as Record<string, unknown>;
@@ -150,6 +329,7 @@ export interface CustomerOrder {
   totalPrice: number;
   status: OrderStatus;
   paymentMethod: OrderPaymentMethod | null;
+  configurationData: string | null;
   contact: {
     name: string | null;
     phone: string | null;
@@ -169,6 +349,7 @@ export interface CreateOrderRequest {
   contactName: string;
   contactPhone: string;
   contactEmail: string;
+  configurationData: string | null;
 }
 
 export async function createOrder(order: CreateOrderRequest): Promise<CustomerOrder> {
@@ -235,6 +416,7 @@ function isCustomerOrder(value: unknown): value is CustomerOrder {
     && typeof order.totalPrice === 'number'
     && ['new', 'in_progress', 'completed', 'cancelled'].includes(String(order.status))
     && (['cash', 'leasing', 'credit'].includes(String(order.paymentMethod)) || order.paymentMethod === null)
+    && (typeof order.configurationData === 'string' || order.configurationData === null)
     && typeof contact === 'object'
     && contact !== null
     && ['name', 'phone', 'email'].every(field =>

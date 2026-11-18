@@ -42,6 +42,9 @@ public class CustomerOrder {
     @Column(name = "selected_options", nullable = false, columnDefinition = "TEXT")
     private String selectedOptions;
 
+    @Column(name = "configuration_data", columnDefinition = "TEXT")
+    private String configurationData;
+
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
 

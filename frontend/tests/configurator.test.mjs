@@ -42,18 +42,18 @@ test('URL cannot inject prices, unknown options, or an incompatible spoiler', ()
   assert.equal(getQuote(configuration).total, 1_904_000);
 });
 
-test('malformed draft data falls back to valid defaults', () => {
+test('malformed configuration data falls back to valid defaults', () => {
   for (const value of [null, undefined, [], 'invalid', { paint: 42, extras: {}, package: '__proto__' }]) {
     assert.deepEqual(normalizeConfiguration(value), DEFAULT_CONFIGURATION);
   }
 });
 
-test('unavailable panoramic roof is removed from drafts, shared links and the quote', () => {
-  const draft = normalizeConfiguration({ extras: ['roof', 'night', 'recorder'] });
-  assert.deepEqual(draft.extras, ['night', 'recorder']);
+test('unavailable panoramic roof is removed from configurations, shared links and the quote', () => {
+  const configuration = normalizeConfiguration({ extras: ['roof', 'night', 'recorder'] });
+  assert.deepEqual(configuration.extras, ['night', 'recorder']);
   const restored = configurationFromSearch('?extra=roof&extra=night&extra=recorder');
-  assert.deepEqual(restored.extras, draft.extras);
+  assert.deepEqual(restored.extras, configuration.extras);
   assert.equal(configurationToSearch({ ...DEFAULT_CONFIGURATION, extras: ['roof'] }).includes('roof'), false);
-  assert.equal(getQuote(draft).total, 1_927_000);
+  assert.equal(getQuote(configuration).total, 1_927_000);
   assert.equal(getQuote({ ...DEFAULT_CONFIGURATION, extras: ['roof'] }).optionsPrice, 0);
 });

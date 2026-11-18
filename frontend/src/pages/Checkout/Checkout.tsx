@@ -9,6 +9,7 @@ import { useAuthModal } from '../../context/useAuthModal';
 import type { CarDetailsData } from '../../types/Car';
 import {
   configurationFromSearch,
+  configurationToSearch,
   getQuote,
   getSelections,
   formatMoney,
@@ -148,8 +149,9 @@ export function Checkout() {
         contactName: contact.name.trim(),
         contactPhone: contact.phone.trim(),
         contactEmail: contact.email.trim(),
+        configurationData: isConfiguratorOrder ? configurationToSearch(configuration) : null,
       });
-      navigate('/orders', { state: { createdApplicationId: String(application.id) } });
+      navigate('/profile?tab=orders', { state: { createdApplicationId: String(application.id) } });
     } catch (error) {
       console.error('Не вдалося надіслати заявку:', error);
       if (error instanceof Error && error.message === 'Unauthorized') {

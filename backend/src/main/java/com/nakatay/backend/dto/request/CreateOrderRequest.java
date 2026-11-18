@@ -14,5 +14,6 @@ public record CreateOrderRequest(
         String paymentMethod,
         String contactName,
         String contactPhone,
-        String contactEmail
+        String contactEmail,
+        String configurationData
 ) {}

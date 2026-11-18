@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MdDirectionsCarFilled } from 'react-icons/md';
-import { formatMoney } from '../Configurator/configuration';
+import {
+  DEFAULT_CONFIGURATION,
+  INTERIORS,
+  PACKAGES,
+  PAINTS,
+  WHEELS,
+  configurationFromSearch,
+  configurationToSearch,
+  formatMoney,
+} from '../Configurator/configuration';
 import { fetchOrders, getCarImageUrl } from '../../api';
 import type { CustomerOrder, OrderStatus } from '../../api';
 import './Applications.css';
@@ -19,6 +28,26 @@ function formatDate(value: string): string {
     month: 'long',
     year: 'numeric',
   }).format(new Date(value));
+}
+
+function getVehicleLink(application: CustomerOrder): string {
+  if (application.carId !== null) return `/cars/${application.carId}`;
+
+  if (application.configurationData) {
+    const savedConfiguration = configurationFromSearch(`?${application.configurationData}`);
+    return `/create?${configurationToSearch(savedConfiguration)}`;
+  }
+
+  const savedOptions = new Set(application.selectedOptions);
+  return `/create?${configurationToSearch({
+    ...DEFAULT_CONFIGURATION,
+    paint: PAINTS.find(paint => paint.name === application.color)?.id ?? DEFAULT_CONFIGURATION.paint,
+    wheels: WHEELS.find(wheel => savedOptions.has(wheel.name))?.id ?? DEFAULT_CONFIGURATION.wheels,
+    interior: INTERIORS.find(interior =>
+      savedOptions.has(interior.summary) || savedOptions.has(interior.name),
+    )?.id ?? DEFAULT_CONFIGURATION.interior,
+    package: PACKAGES.find(option => savedOptions.has(option.name))?.id ?? DEFAULT_CONFIGURATION.package,
+  })}`;
 }
 
 function ApplicationCard({ application, isAdmin }: { application: CustomerOrder; isAdmin: boolean }) {
@@ -51,23 +80,22 @@ function ApplicationCard({ application, isAdmin }: { application: CustomerOrder;
 
       <div className="application-price">
         <strong>{formatMoney(application.totalPrice)}</strong>
-        {application.carId !== null && (
-          <Link to={`/cars/${application.carId}`}>
+        <Link to={getVehicleLink(application)}>
           Переглянути авто
-          </Link>
-        )}
+        </Link>
       </div>
     </article>
   );
 }
 
-export function Applications() {
+export function Applications({ headingLevel = 1 }: { headingLevel?: 1 | 2 } = {}) {
   const [applications, setApplications] = useState<CustomerOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const location = useLocation();
   const createdApplicationId = (location.state as { createdApplicationId?: string } | null)?.createdApplicationId;
   const isAdmin = localStorage.getItem('userRole')?.toUpperCase() === 'ADMIN';
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,9 +116,9 @@ export function Applications() {
   }, []);
 
   return (
-    <main className="applications-page">
+    <section className="applications-page">
       <header className="applications-heading">
-        <h1>{isAdmin ? 'Усі заявки клієнтів' : 'Історія та статус заявок'}</h1>
+        <Heading>{isAdmin ? 'Усі заявки клієнтів' : 'Історія та статус заявок'}</Heading>
         <p>{isAdmin
           ? 'Переглядайте заявки клієнтів, їхні контактні дані та статуси.'
           : 'Тут ви можете переглянути статус ваших замовлень та запитів на покупку.'}</p>
@@ -123,6 +151,6 @@ export function Applications() {
           )}
         </section>
       )}
-    </main>
+    </section>
   );
 }

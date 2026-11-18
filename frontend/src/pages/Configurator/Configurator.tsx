@@ -17,6 +17,7 @@ import {
 } from './configuration';
 import type { Configuration, ExtraId } from './configuration';
 import './Configurator.css';
+import { SharedBuildPreview } from '../SharedBuildPreview/SharedBuildPreview';
 
 const TABS = [
   { id: 'exterior', label: 'Екстер’єр' }, { id: 'interior', label: 'Інтер’єр' },
@@ -65,6 +66,7 @@ function ConfiguratorPage({ search }: { search: string }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const selected = getSelections(configuration);
   const quote = getQuote(configuration);
+  const [isSharedPreview, setIsSharedPreview] = useState(publicShareCodeParam !== null);
 
   useEffect(() => {
     if (!notice) return;
@@ -205,6 +207,14 @@ function ConfiguratorPage({ search }: { search: string }) {
           Відкрити конфігуратор
         </button>
       </div>
+    );
+  }
+  if (isSharedPreview) {
+    return (
+      <SharedBuildPreview
+        configuration={configuration}
+        onEdit={() => setIsSharedPreview(false)}
+      />
     );
   }
 

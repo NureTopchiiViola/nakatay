@@ -112,3 +112,33 @@
   padding: 0 0.75rem;
   text-decoration: none;
 }
+
+.vehicle-card-media {
+  position: relative;
+}
+
+.vehicle-card-favorite {
+  align-items: center;
+  background: rgb(33 33 33 / 60%);
+  border: 0;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  height: 2.5rem;
+  justify-content: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: color 180ms ease, background-color 180ms ease;
+  width: 2.5rem;
+}
+
+.vehicle-card-favorite:hover,
+.vehicle-card-favorite.active {
+  color: #fff;
+}
+
+.vehicle-card-favorite:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

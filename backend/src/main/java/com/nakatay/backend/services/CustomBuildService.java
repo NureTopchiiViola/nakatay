@@ -91,6 +91,18 @@ public class CustomBuildService {
         return toShareResponse(sharedBuild);
     }
 
+    @Transactional
+    public void deleteBuild(User currentUser, Long buildId) {
+        if (currentUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Необхідна авторизація");
+        }
+
+        SavedCustomBuild build = customBuildRepository.findByIdAndUser_Id(buildId, currentUser.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Збірку не знайдено"));
+
+        customBuildRepository.delete(build);
+    }
+
     private void validateRequest(SaveCustomBuildRequest request) {
         if (request == null || !MODEL_NAME.equals(request.modelName())) {
             throw new IllegalArgumentException("Невідома модель автомобіля");

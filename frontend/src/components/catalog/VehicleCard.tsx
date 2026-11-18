@@ -30,11 +30,10 @@ export function VehicleCard({
   transmission,
   price
 }: VehicleCardProps) {
-  
   const { toggleCompare, isInComparison } = useCarComparison();
   const currentlyCompared = isInComparison(id);
   const { isFavorite, isPending, toggleFavorite } = useFavorites();
-  const { openAuthModal } = useAuthModal();
+  const { openAuthPrompt } = useAuthModal();
   const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
   const currentlyFavorite = isAuthenticated && isFavorite(id);
   const [failedImageSrc, setFailedImageSrc] = useState('');
@@ -43,15 +42,33 @@ export function VehicleCard({
 
   return (
     <article className="vehicle-card">
-      <Link 
-        to={`/cars/${id}`} 
-        className={`vehicle-card-image-wrapper ${imageFailed ? 'image-failed' : ''}`}
-        style={{ display: 'block', textDecoration: 'none' }}
-      >
-        {imageSrc && !imageFailed
-          ? <img src={imageSrc} alt={title} className="vehicle-card-image" onError={() => setFailedImageSrc(imageSrc)} />
-          : <MdDirectionsCarFilled className="vehicle-card-image-placeholder" aria-hidden="true" />}
-      </Link>
+      <div className="vehicle-card-media">
+        <Link 
+          to={`/cars/${id}`} 
+          className={`vehicle-card-image-wrapper ${imageFailed ? 'image-failed' : ''}`}
+          style={{ display: 'block', textDecoration: 'none' }}
+        >
+          {imageSrc && !imageFailed
+            ? <img src={imageSrc} alt={title} className="vehicle-card-image" onError={() => setFailedImageSrc(imageSrc)} />
+            : <MdDirectionsCarFilled className="vehicle-card-image-placeholder" aria-hidden="true" />}
+        </Link>
+        <button
+          type="button"
+          className={`vehicle-card-favorite ${currentlyFavorite ? 'active' : ''}`}
+          disabled={isPending(id)}
+          onClick={() => {
+            if (!isAuthenticated) {
+              openAuthPrompt();
+              return;
+            }
+            void toggleFavorite(favoriteCar);
+          }}
+          aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
+          aria-pressed={currentlyFavorite}
+        >
+          {currentlyFavorite ? <MdFavorite size={26} /> : <MdOutlineFavoriteBorder size={26} />}
+        </button>
+      </div>
 
       <div className="vehicle-card-body">
         <header className="vehicle-card-header">
@@ -68,20 +85,6 @@ export function VehicleCard({
               onClick={() => toggleCompare(id)}
               aria-label={currentlyCompared ? "Видалити з порівняння" : "Додати до порівняння"}
               iconLeft={currentlyCompared ? <img src={balanceCheckIcon} alt="" /> : <MdOutlineBalance />} 
-            />
-            <Button
-              variant="ghost"
-              disabled={isPending(id)}
-              onClick={() => {
-                if (!isAuthenticated) {
-                  openAuthModal();
-                  return;
-                }
-                void toggleFavorite(favoriteCar);
-              }}
-              aria-label={currentlyFavorite ? 'Видалити з обраного' : 'Додати в обране'}
-              aria-pressed={currentlyFavorite}
-              iconLeft={currentlyFavorite ? <MdFavorite /> : <MdOutlineFavoriteBorder />}
             />
           </div>
         </header>

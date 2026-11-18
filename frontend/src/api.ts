@@ -480,3 +480,28 @@ export async function fetchUserProfile(): Promise<UserProfile> {
     role: profile.role,
   };
 }
+
+export async function updateOrderStatus(orderId: number, status: OrderStatus): Promise<CustomerOrder> {
+  const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    throw new Error('Unauthorized');
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to update order status: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isCustomerOrder(data)) {
+    throw new Error('The order status endpoint returned an invalid response.');
+  }
+  return data;
+}

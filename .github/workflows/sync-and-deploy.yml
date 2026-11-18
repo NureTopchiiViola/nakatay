@@ -1,22 +1,40 @@
-name: Deploy Backend to Heroku
+name: Sync Upstream & Deploy Backend
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  sync-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout fork
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Deploy backend subtree to Heroku
+      - name: Sync with upstream repository
+        id: sync
+        run: |
+          git remote add upstream https://github.com/ВЛАДЕЛЕЦ_ОРИГИНАЛА/nakatay.git
+          git fetch upstream main
+          
+          LOCAL_HASH=$(git rev-parse HEAD)
+          UPSTREAM_HASH=$(git rev-parse upstream/main)
+          
+          if [ "$LOCAL_HASH" != "$UPSTREAM_HASH" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git merge upstream/main --no-edit
+            git push origin main
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy backend to Heroku
+        if: steps.sync.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |

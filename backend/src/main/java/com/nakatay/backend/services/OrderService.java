@@ -15,6 +15,8 @@ import com.nakatay.backend.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,6 +32,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CarTrimRepository carTrimRepository;
     private final ObjectMapper objectMapper;
+    private static final Set<String> ALLOWED_STATUSES = Set.of("NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED");
 
     @Transactional
     public OrderResponse createOrder(User user, CreateOrderRequest request) {
@@ -83,6 +86,22 @@ public class OrderService {
                 ? orderRepository.findAllByOrderByCreatedAtDescIdDesc()
                 : orderRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(user.getId());
         return orders.stream().map(this::toResponse).toList();
+    }
+
+    @Transactional
+    public OrderResponse updateOrderStatus(User user, Long orderId, String status) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Доступ лише для адміністратора");
+        }
+        if (status == null || !ALLOWED_STATUSES.contains(status.trim().toUpperCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("Некоректний статус заявки");
+        }
+
+        CustomerOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Заявку не знайдено"));
+
+        order.setStatus(status.trim().toUpperCase(Locale.ROOT));
+        return toResponse(orderRepository.save(order));
     }
 
     private void validateRequest(CreateOrderRequest request) {

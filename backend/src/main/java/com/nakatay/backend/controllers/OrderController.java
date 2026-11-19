@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -35,5 +38,16 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getOrders(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(orderService.getOrders(currentUser));
+    }
+
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<OrderResponse> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(currentUser, orderId, body.get("status"))
+        );
     }
 }

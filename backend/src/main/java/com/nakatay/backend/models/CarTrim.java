@@ -43,4 +43,7 @@ public class CarTrim {
 
     @Column(name = "is_available", nullable = false)
     private boolean isAvailable = true;
+
+    @Column(name = "visualizer_key")
+    private String visualizerKey;
 }

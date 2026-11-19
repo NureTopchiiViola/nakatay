@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface OptionRepository extends JpaRepository<Option, Long> {
     List<Option> findByCarTrimIdAndIsAvailableTrue(Long carTrimId);
+    List<Option> findByCarTrimIdOrderById(Long carTrimId);
 }

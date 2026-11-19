@@ -3,6 +3,7 @@ package com.nakatay.backend.controllers;
 import com.nakatay.backend.dto.request.ConfigRequest;
 import com.nakatay.backend.dto.request.PriceRequest;
 import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.ConfiguratorSession;
 import com.nakatay.backend.dto.response.OptionDto;
 import com.nakatay.backend.dto.response.PriceResponse;
 import com.nakatay.backend.models.User;
@@ -24,6 +25,11 @@ import java.util.List;
 public class OptionController {
 
     private final OptionService configuratorService;
+
+    @GetMapping("/session")
+    public ConfiguratorSession getSession(@RequestParam(required = false) Long trimId) {
+        return configuratorService.getSession(trimId);
+    }
 
     @Operation(summary = "Отримати доступні опції для комплектації авто")
     @GetMapping("/trims/{trimId}/options")

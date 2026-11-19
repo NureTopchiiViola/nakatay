@@ -3,6 +3,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdOutlineBookmarkBorder, MdOutlineShare, MdChevronRight, MdClose, MdCheck, MdContentCopy, MdOutlineFileDownload } from 'react-icons/md';
 import { CarViewer } from './CarViewer';
+import { CatalogConfigurator } from './CatalogConfigurator';
 import {
   createPublicCustomBuildShare,
   fetchPublicCustomBuildShare,
@@ -40,6 +41,10 @@ function Choice({ checked, name, value, title, description, price, disabled, vis
 
 export function Configurator() {
   const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  if (!params.has('buildId') && !params.has('shareCode') && !params.has('legacy')) {
+    return <CatalogConfigurator key={location.search} search={location.search} />;
+  }
   return <ConfiguratorPage key={location.search} search={location.search} />;
 }
 
@@ -105,8 +110,7 @@ function ConfiguratorPage({ search }: { search: string }) {
   function preserveConfigurationInUrl() {
     const params = new URLSearchParams(configurationToSearch(configuration));
     const currentParams = new URLSearchParams(search);
-    const carId = currentParams.get('carId');
-    if (carId) params.set('carId', carId);
+    if (currentParams.has('legacy')) params.set('legacy', '1');
     if (buildIdParam) params.set('buildId', buildIdParam);
     navigate(`/create?${params.toString()}`, { replace: true });
   }
@@ -226,7 +230,8 @@ function ConfiguratorPage({ search }: { search: string }) {
           <div className="configurator-base-price"><span>Базова вартість:</span><strong>{formatMoney(BASE_PRICE)}</strong></div>
         </header>
         <CarViewer configuration={configuration} cameraView={tab === 'interior' ? 'interior' : 'exterior'} onReset={() => {
-          setConfiguration({ ...DEFAULT_CONFIGURATION, extras: [] }); setPromo(''); setPromoError(''); setNotice('Стандартну конфігурацію відновлено.');
+          setConfiguration({ ...DEFAULT_CONFIGURATION, extras: [] }); setTab('exterior');
+          setPromo(''); setPromoError(''); setNotice('Стандартну конфігурацію відновлено.');
         }} />
         <dl className="configurator-summary-cards">
           <div><dt>Колір кузова:</dt><dd>{selected.paint.name}</dd></div>
@@ -307,8 +312,6 @@ function ConfiguratorPage({ search }: { search: string }) {
             </button>
             <button type="button" className="configurator-primary" onClick={() => {
               const params = new URLSearchParams(configurationToSearch(configuration));
-              const carId = new URLSearchParams(search).get('carId');
-              if (carId) params.set('carId', carId);
               navigate(`/checkout?${params.toString()}`);
             }}>Подати заявку <MdChevronRight /></button>
           </div>

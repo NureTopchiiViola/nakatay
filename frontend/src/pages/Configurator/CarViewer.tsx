@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Md3dRotation, MdOutlinePhoto, MdFullscreen, MdFullscreenExit, MdRestartAlt } from 'react-icons/md';
+import { Md3dRotation, MdOutlinePhoto, MdFullscreen, MdFullscreenExit } from 'react-icons/md';
 import type { Configuration } from './configuration';
+import { ResetConfiguration } from './ResetConfiguration';
 
 const CarScene = lazy(() => import('./CarScene'));
 
@@ -45,9 +46,9 @@ export function CarViewer({ configuration, cameraView, onReset }: CarViewerProps
         <button type="button" className="configurator-fullscreen" onClick={toggleFullscreen} aria-label={expanded ? 'Вийти з повного екрана' : 'На повний екран'}>
           {expanded ? <MdFullscreenExit /> : <MdFullscreen />}
         </button>
-        <button type="button" onClick={() => {
-          onReset(); setAngle(90); setMode('3d'); setResetVersion(value => value + 1);
-        }}><MdRestartAlt /> Скинути</button>
+        <ResetConfiguration onConfirm={() => {
+          onReset(); setAngle(90); setMode('3d'); setModelSource('glb'); setResetVersion(value => value + 1);
+        }} />
       </div>
     </div>
     <Suspense fallback={<div className="configurator-viewer-loading" role="status">Завантаження 3D-сцени…</div>}>

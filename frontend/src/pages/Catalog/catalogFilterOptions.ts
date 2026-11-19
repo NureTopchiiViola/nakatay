@@ -21,7 +21,7 @@ export const BRAND_MODELS_MAP: Record<string, (readonly [string, string])[]> = {
   'Nissan': [['Rogue', 'Rogue'], ['Altima', 'Altima'], ['Pathfinder', 'Pathfinder'], ['Z', 'Z']],
   'Lexus': [['RX', 'RX'], ['NX', 'NX'], ['ES', 'ES'], ['IS', 'IS']],
   'Volvo': [['XC60', 'XC60'], ['XC90', 'XC90'], ['S60', 'S60']],
-  'BMW': [['3 Series', '3 Series'], ['X3', 'X3']],
+  'BMW': [['3 Series', '3 Series'], ['X3', 'X3'], ['E46 328i', 'E46 328i']],
   'Audi': [['A5', 'A5'], ['Q5', 'Q5']],
   'Porsche': [['Macan', 'Macan']],
 };

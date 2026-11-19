@@ -3,6 +3,8 @@ package com.nakatay.backend.services;
 import com.nakatay.backend.dto.request.ConfigRequest;
 import com.nakatay.backend.dto.request.PriceRequest;
 import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.ConfiguratorSession;
+import com.nakatay.backend.common.exception.ResourceNotFoundException;
 import com.nakatay.backend.dto.response.OptionDto;
 import com.nakatay.backend.dto.response.PriceResponse;
 import com.nakatay.backend.models.CarTrim;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,22 @@ public class OptionServiceImpl implements OptionService {
     private final OptionRepository optionRepository;
     private final ConfigRepository savedConfigRepository;
     private final CarTrimRepository carTrimRepository;
+    private final ConfigurationPricing pricing;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ConfiguratorSession getSession(Long trimId) {
+        CarTrim trim = (trimId == null ? carTrimRepository.findByVisualizerKey("bmw-e46")
+                : carTrimRepository.findByIdWithModel(trimId))
+                .filter(item -> item.isAvailable() && !item.getCarModel().isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Комплектацію не знайдено"));
+        var model = trim.getCarModel();
+        String image = trim.getGalleryUrls().stream().findFirst().orElse(model.getMainImageUrl());
+        return new ConfiguratorSession(trim.getId(),
+                model.getBrand() + " " + model.getModelName() + " " + trim.getTrimName() + " · " + trim.getYear(),
+                calculateTrimBasePrice(trim), image, trim.getVisualizerKey(),
+                optionRepository.findByCarTrimIdOrderById(trim.getId()).stream().map(this::mapToOptionDto).toList());
+    }
 
     @Override
     public List<OptionDto> getOptionsForTrim(Long trimId) {
@@ -37,24 +54,12 @@ public class OptionServiceImpl implements OptionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PriceResponse calculatePrice(PriceRequest request) {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
-                .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
-
-        BigDecimal basePrice = calculateTrimBasePrice(trim);
-
-        List<Option> options = request.selectedOptionIds() != null && !request.selectedOptionIds().isEmpty()
-                ? optionRepository.findAllById(request.selectedOptionIds())
-                : Collections.emptyList();
-
-        BigDecimal optionsCost = options.stream()
-                .map(Option::getPriceModifier)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal discount = BigDecimal.ZERO;
-        BigDecimal totalPrice = basePrice.add(optionsCost).subtract(discount);
-
-        return new PriceResponse(basePrice, optionsCost, discount, totalPrice);
+                .orElseThrow(() -> new ResourceNotFoundException("Комплектацію не знайдено"));
+        var quote = pricing.quote(trim, request.selectedOptionIds());
+        return new PriceResponse(quote.basePrice(), quote.optionsCost(), BigDecimal.ZERO, quote.total());
     }
 
     @Override
@@ -63,26 +68,19 @@ public class OptionServiceImpl implements OptionService {
         CarTrim trim = carTrimRepository.findById(request.carTrimId())
                 .orElseThrow(() -> new IllegalArgumentException("Комплектацію не знайдено: " + request.carTrimId()));
 
-        List<Option> options = request.selectedOptionIds() != null && !request.selectedOptionIds().isEmpty()
-                ? optionRepository.findAllById(request.selectedOptionIds())
-                : Collections.emptyList();
-
-        BigDecimal basePrice = calculateTrimBasePrice(trim);
-        BigDecimal optionsCost = options.stream()
-                .map(Option::getPriceModifier)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var quote = pricing.quote(trim, request.selectedOptionIds());
 
         SavedConfig savedConfig = SavedConfig.builder()
                 .user(currentUser)
                 .carTrim(trim)
                 .shareCode(generateUniqueShareCode())
-                .totalPrice(basePrice.add(optionsCost))
-                .selectedOptions(new HashSet<>(options))
+                .totalPrice(quote.total())
+                .selectedOptions(new HashSet<>(quote.options()))
                 .isPublic(Boolean.TRUE.equals(request.isPublic()))
                 .build();
 
         SavedConfig saved = savedConfigRepository.save(savedConfig);
-        return mapToSavedConfigResponse(saved, basePrice);
+        return mapToSavedConfigResponse(saved, quote.basePrice());
     }
 
     @Override
@@ -181,7 +179,11 @@ public class OptionServiceImpl implements OptionService {
                 opt.getName(),
                 opt.getPriceModifier(),
                 opt.getAssetUrl(),
-                opt.isAvailable()
+                opt.isAvailable(),
+                opt.getOptionGroup(),
+                opt.getVisualCode(),
+                opt.isFactoryDefault(),
+                opt.getRequiredVisualCode()
         );
     }
 

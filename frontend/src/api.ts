@@ -1,6 +1,6 @@
 import type { Configuration } from './pages/Configurator/configuration';
 
-export const API_BASE_URL = 'https://nakatay-backend-api-a91c65d785b6.herokuapp.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nakatay-backend-api-a91c65d785b6.herokuapp.com';
 
 export interface FavoriteCar {
   id: number;
@@ -355,6 +355,7 @@ export interface CustomerOrder {
 }
 
 export interface CreateOrderRequest {
+  selectedOptionIds?: number[];
   carId: number | null;
   vehicleName: string;
   year: number | null;

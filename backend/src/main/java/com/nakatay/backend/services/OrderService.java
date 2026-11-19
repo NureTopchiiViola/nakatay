@@ -30,6 +30,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CarTrimRepository carTrimRepository;
     private final ObjectMapper objectMapper;
+    private final ConfigurationPricing pricing;
 
     @Transactional
     public OrderResponse createOrder(User user, CreateOrderRequest request) {
@@ -40,6 +41,9 @@ public class OrderService {
         Integer vehicleYear = request.year();
         String imageUrl = request.imageUrl();
         BigDecimal totalPrice = request.totalPrice();
+        List<String> selectedOptions = request.selectedOptions();
+        String configurationData = request.configurationData();
+        String color = request.color() == null ? "" : request.color().trim();
 
         if (request.carId() != null) {
             carTrim = carTrimRepository.findByIdWithModel(request.carId())
@@ -53,7 +57,15 @@ public class OrderService {
             vehicleYear = carTrim.getYear();
             imageUrl = carTrim.getGalleryUrls().stream().findFirst()
                     .orElse(carTrim.getCarModel().getMainImageUrl());
-            totalPrice = carTrim.getCarModel().getBasePrice().add(carTrim.getPriceModifier());
+            var quote = pricing.quote(carTrim, request.selectedOptionIds());
+            totalPrice = quote.total();
+            if (request.selectedOptionIds() != null) {
+                selectedOptions = quote.options().stream().map(option -> option.getName()).toList();
+                color = quote.options().stream().filter(option -> "paint".equals(option.getOptionGroup()))
+                        .map(option -> option.getName()).findFirst().orElse("");
+                configurationData = "configured=1" + quote.options().stream()
+                        .map(option -> "&option=" + option.getId()).reduce("", String::concat);
+            }
         } else if (vehicleName.isBlank()) {
             throw new IllegalArgumentException("Назва автомобіля обов'язкова");
         }
@@ -64,9 +76,9 @@ public class OrderService {
         order.setVehicleName(vehicleName);
         order.setVehicleYear(vehicleYear);
         order.setImageUrl(imageUrl);
-        order.setColor(request.color() == null ? "" : request.color().trim());
-        order.setSelectedOptions(writeSelectedOptions(request.selectedOptions()));
-        order.setConfigurationData(request.configurationData());
+        order.setColor(color);
+        order.setSelectedOptions(writeSelectedOptions(selectedOptions));
+        order.setConfigurationData(configurationData);
         order.setTotalPrice(totalPrice);
         order.setStatus("NEW");
         order.setPaymentMethod(request.paymentMethod().trim().toLowerCase(Locale.ROOT));
@@ -88,6 +100,9 @@ public class OrderService {
     private void validateRequest(CreateOrderRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Дані заявки обов'язкові");
+        }
+        if (request.carId() == null && request.selectedOptionIds() != null) {
+            throw new IllegalArgumentException("Вкажіть комплектацію для вибраних опцій");
         }
         if (request.contactName() == null || request.contactName().isBlank()) {
             throw new IllegalArgumentException("Ім'я контактної особи обов'язкове");

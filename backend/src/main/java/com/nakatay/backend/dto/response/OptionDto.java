@@ -24,5 +24,9 @@ public record OptionDto(
         String assetUrl,
 
         @Schema(description = "Чи доступна опція для замовлення", example = "true")
-        boolean isAvailable
+        boolean isAvailable,
+        String optionGroup,
+        String visualCode,
+        boolean factoryDefault,
+        String requiredVisualCode
 ) {}

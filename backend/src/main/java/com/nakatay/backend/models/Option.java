@@ -39,4 +39,16 @@ public class Option {
 
     @Column(name = "is_available", nullable = false)
     private boolean isAvailable = true;
+
+    @Column(name = "option_group")
+    private String optionGroup;
+
+    @Column(name = "visual_code")
+    private String visualCode;
+
+    @Column(name = "is_factory_default", nullable = false)
+    private boolean factoryDefault;
+
+    @Column(name = "required_visual_code")
+    private String requiredVisualCode;
 }

@@ -43,6 +43,7 @@ public class SecurityConfig {
                         //public
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/configurator/trims/*/options").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/configurator/session").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/configurator/calculate").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/configurator/share/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/configurator/custom-builds/share").permitAll()

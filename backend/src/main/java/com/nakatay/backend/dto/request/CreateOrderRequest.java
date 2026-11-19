@@ -15,5 +15,6 @@ public record CreateOrderRequest(
         String contactName,
         String contactPhone,
         String contactEmail,
-        String configurationData
+        String configurationData,
+        List<Long> selectedOptionIds
 ) {}

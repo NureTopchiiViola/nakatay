@@ -3,6 +3,7 @@ package com.nakatay.backend.services;
 import com.nakatay.backend.dto.request.ConfigRequest;
 import com.nakatay.backend.dto.request.PriceRequest;
 import com.nakatay.backend.dto.response.ConfigResponse;
+import com.nakatay.backend.dto.response.ConfiguratorSession;
 import com.nakatay.backend.dto.response.OptionDto;
 import com.nakatay.backend.dto.response.PriceResponse;
 import com.nakatay.backend.models.User;
@@ -11,6 +12,7 @@ import java.util.List;
 
 
 public interface OptionService {
+    ConfiguratorSession getSession(Long trimId);
     List<OptionDto> getOptionsForTrim(Long trimId);
     PriceResponse calculatePrice(PriceRequest request);
     ConfigResponse saveConfiguration(ConfigRequest request, User currentUser);

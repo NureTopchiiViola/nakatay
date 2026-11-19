@@ -1,20 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL, createOrder, getCarImageUrls } from '../../api';
 import type { OrderPaymentMethod } from '../../api';
 import { getUserProfile } from '../../auth/userProfile';
 import type { UserProfile } from '../../auth/userProfile';
 import { useAuthModal } from '../../context/useAuthModal';
 import type { CarDetailsData } from '../../types/Car';
-import {
-  configurationFromSearch,
-  configurationToSearch,
-  getQuote,
-  getSelections,
-  formatMoney,
-  MODEL_NAME,
-} from '../Configurator/configuration';
+import { formatMoney } from '../Configurator/configuration';
+import { fetchCatalogSession, optionsFromSearch, verifyCatalogPrice } from '../Configurator/catalogConfiguration';
+import type { CatalogOption, CatalogSession } from '../Configurator/catalogConfiguration';
 import './Checkout.css';
 
 type ContactField = keyof UserProfile;
@@ -62,6 +57,11 @@ function validateContact(field: ContactField, value: string): string {
 }
 
 export function Checkout() {
+  const location = useLocation();
+  return <CheckoutPage key={location.pathname + location.search} />;
+}
+
+function CheckoutPage() {
   const navigate = useNavigate();
   const { openAuthModal } = useAuthModal();
   const { id: routeCarId } = useParams<{ id: string }>();
@@ -76,17 +76,20 @@ export function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [car, setCar] = useState<CarDetailsData | null>(null);
   const [carError, setCarError] = useState('');
+  const [configuredCar, setConfiguredCar] = useState<{
+    session: CatalogSession;
+    selection: CatalogOption[];
+    quote: Awaited<ReturnType<typeof verifyCatalogPrice>>;
+  }>();
 
-  const configuration = configurationFromSearch(window.location.search);
-  const quote = getQuote(configuration);
-  const selections = getSelections(configuration);
-  const isConfiguratorOrder = !carId;
-  const basePrice = isConfiguratorOrder ? quote.basePrice : car?.price ?? 0;
-  const optionsPrice = isConfiguratorOrder ? quote.optionsPrice : 0;
-  const total = basePrice + optionsPrice;
+  const isConfiguratorOrder = searchParams.get('configured') === '1' || (!routeCarId && !carId);
+  const basePrice = configuredCar?.quote.basePrice ?? car?.price ?? 0;
+  const optionsPrice = configuredCar?.quote.optionsCost ?? 0;
+  const total = configuredCar?.quote.totalPrice ?? basePrice;
+  const ready = isConfiguratorOrder ? Boolean(configuredCar) : Boolean(car);
 
   useEffect(() => {
-    if (!carId) return;
+    if (isConfiguratorOrder || !carId) return;
     let active = true;
     fetch(`${API_BASE_URL}/api/cars/${carId}`, {
       headers: { Accept: 'application/json' },
@@ -104,7 +107,22 @@ export function Checkout() {
       });
 
     return () => { active = false; };
-  }, [carId]);
+  }, [carId, isConfiguratorOrder]);
+
+  useEffect(() => {
+    if (!isConfiguratorOrder) return;
+    const controller = new AbortController();
+    async function loadConfiguration() {
+      const session = await fetchCatalogSession(carId, controller.signal);
+      const selection = optionsFromSearch(session, searchParams);
+      const quote = await verifyCatalogPrice(session.trimId, selection, controller.signal);
+      if (!controller.signal.aborted) setConfiguredCar({ session, selection, quote });
+    }
+    loadConfiguration().catch(() => {
+      if (!controller.signal.aborted) setCarError('Не вдалося завантажити або перевірити збірку. Поверніться до конфігуратора.');
+    });
+    return () => controller.abort();
+  }, [carId, isConfiguratorOrder, searchParams]);
 
   function updateContact(field: ContactField, value: string) {
     setContact(current => ({ ...current, [field]: value }));
@@ -122,8 +140,8 @@ export function Checkout() {
     setSubmitMessage('');
 
     if (Object.values(nextErrors).some(Boolean) || !hasAcceptedTerms) return;
-    if (carId && !car) {
-      setSubmitMessage('Зачекайте, поки завантажаться дані автомобіля.');
+    if (!ready || carError) {
+      setSubmitMessage(carError || 'Зачекайте, поки завантажаться дані автомобіля.');
       return;
     }
 
@@ -136,20 +154,19 @@ export function Checkout() {
     setIsSubmitting(true);
     try {
       const application = await createOrder({
-        carId: car?.id ?? null,
+        carId: configuredCar?.session.trimId ?? car?.id ?? null,
         vehicleName: carName,
         year: car?.year ?? null,
         imageUrl: image ?? '',
-        color: isConfiguratorOrder ? selections.paint.name : '',
-        selectedOptions: isConfiguratorOrder
-          ? [selections.wheels.name, selections.interior.summary, selections.package.name]
-          : [],
+        color: configuredCar?.selection.find(option => option.optionGroup === 'paint')?.name ?? '',
+        selectedOptions: configuredCar?.selection.map(option => option.name) ?? [],
+        selectedOptionIds: configuredCar?.selection.map(option => option.id),
         totalPrice: total,
         paymentMethod,
         contactName: contact.name.trim(),
         contactPhone: contact.phone.trim(),
         contactEmail: contact.email.trim(),
-        configurationData: isConfiguratorOrder ? configurationToSearch(configuration) : null,
+        configurationData: null,
       });
       navigate('/profile?tab=orders', { state: { createdApplicationId: String(application.id) } });
     } catch (error) {
@@ -165,8 +182,8 @@ export function Checkout() {
     }
   }
 
-  const carName = car ? `${car.brand} ${car.modelName} ${car.trimName}` : MODEL_NAME;
-  const image = car?.galleryUrls?.[0];
+  const carName = configuredCar?.session.title ?? (car ? `${car.brand} ${car.modelName} ${car.trimName}` : '');
+  const image = configuredCar?.session.imageUrl ?? car?.galleryUrls?.[0];
 
   return (
     <main className="checkout-page">
@@ -236,7 +253,7 @@ export function Checkout() {
             </div>
 
             {submitMessage && <p className="checkout-message" role="status">{submitMessage}</p>}
-            <button type="submit" className="checkout-primary checkout-submit" disabled={isSubmitting}>
+            <button type="submit" className="checkout-primary checkout-submit" disabled={isSubmitting || !ready || Boolean(carError)}>
               {isSubmitting ? 'Надсилаємо заявку…' : 'Підтвердити та надіслати заявку'}
             </button>
           </form>
@@ -248,7 +265,7 @@ export function Checkout() {
               <h3>{carName}</h3>
               {carError ? (
                 <p className="checkout-error" role="alert">{carError}</p>
-              ) : carId && !car ? (
+              ) : !ready ? (
                 <p className="checkout-muted">Завантажуємо автомобіль…</p>
               ) : (
                 <>
@@ -256,12 +273,11 @@ export function Checkout() {
                     <div><dt>Базова комплектація</dt><dd>{formatMoney(basePrice)}</dd></div>
                     <div><dt>Додаткове обладнання</dt><dd>{formatMoney(optionsPrice)}</dd></div>
                   </dl>
-                  {isConfiguratorOrder && (
+                  {configuredCar && (
                     <dl className="checkout-options">
-                      <div><dt>Колір кузова</dt><dd>{selections.paint.name}</dd></div>
-                      <div><dt>Колісні диски</dt><dd>{selections.wheels.name}</dd></div>
-                      <div><dt>Салон</dt><dd>{selections.interior.summary}</dd></div>
-                      <div><dt>Пакет</dt><dd>{selections.package.name}</dd></div>
+                      {configuredCar.selection.map(option => <div key={option.id}>
+                        <dt>{option.subCategory ?? 'Опція'}</dt><dd>{option.name}</dd>
+                      </div>)}
                     </dl>
                   )}
                   <div className="checkout-total"><strong>Разом</strong><strong>{formatMoney(total)}</strong></div>

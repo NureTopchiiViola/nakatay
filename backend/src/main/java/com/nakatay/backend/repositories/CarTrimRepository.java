@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface CarTrimRepository extends JpaRepository<CarTrim, Long>, JpaSpecificationExecutor<CarTrim> {
+    Optional<CarTrim> findByVisualizerKey(String visualizerKey);
+
     @Query("SELECT t FROM CarTrim t JOIN FETCH t.carModel m LEFT JOIN FETCH t.galleryUrls WHERE t.id = :id")
     Optional<CarTrim> findByIdWithModel(@Param("id") Long id);
 

@@ -50,7 +50,7 @@ export function CarDetails() {
   
   const { toggleCompare, isInComparison } = useCarComparison();
   const { isFavorite, isPending, toggleFavorite } = useFavorites();
-  const { openAuthModal, openAuthPrompt } = useAuthModal();
+  const { openAuthPrompt } = useAuthModal();
   const isAuthenticated = Boolean(localStorage.getItem('accessToken'));
   const currentlyCompared = car ? isInComparison(car.id) : false;
   const currentlyFavorite = isAuthenticated && car ? isFavorite(car.id) : false;

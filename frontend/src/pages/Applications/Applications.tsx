@@ -38,6 +38,13 @@ function formatDate(value: string): string {
 }
 
 function getVehicleLink(application: CustomerOrder): string {
+  if (application.carId !== null && application.configurationData) {
+    const params = new URLSearchParams(application.configurationData);
+    if (params.get('configured') === '1') {
+      params.set('carId', String(application.carId));
+      return `/create?${params.toString()}`;
+    }
+  }
   if (application.carId !== null) return `/cars/${application.carId}`;
 
   if (application.configurationData) {
